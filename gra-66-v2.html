@@ -1,0 +1,3911 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b2a17" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="66" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>66 — gra karciana w parach</title>
+    <style>
+      :root {
+        --gold: #f5c542;
+        --t0: #7fb2ff;
+        --t1: #ff8a8a;
+        --felt-a: #239152;
+        --felt-b: #0b4424;
+        --wood: #5b3a14;
+        --red: #d42a2a;
+        --blk: #161616;
+        --cw: clamp(46px, 14vw, 78px);
+        --tw: clamp(38px, min(12.5vw, 6.2vh), 64px);
+        --mw: clamp(12px, 3.4vw, 18px);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        background: radial-gradient(circle at 50% 0%, #15432a, #06140b 70%);
+        background-attachment: fixed;
+        color: #eaf2ec;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      button {
+        font: inherit;
+        touch-action: manipulation;
+        cursor: pointer;
+      }
+      .s-red {
+        color: #ff6b6b;
+      }
+      .s-blk {
+        color: #f2f2f2;
+      }
+
+      #app {
+        max-width: 760px;
+        margin: 0 auto;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: calc(6px + env(safe-area-inset-top)) 8px
+          calc(10px + env(safe-area-inset-bottom));
+      }
+
+      /* ── Top bar ─────────────────────────────────────────── */
+      #top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand {
+        font-weight: 900;
+        font-size: 1.3rem;
+        color: var(--gold);
+        letter-spacing: 1px;
+        text-shadow: 0 2px 6px #000;
+      }
+      .match {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+      }
+      .chip {
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid;
+        white-space: nowrap;
+      }
+      .chip.t0 {
+        border-color: var(--t0);
+        color: var(--t0);
+      }
+      .chip.t1 {
+        border-color: var(--t1);
+        color: var(--t1);
+      }
+      .chip b {
+        color: #fff;
+        font-size: 1.05rem;
+      }
+      .to {
+        font-size: 0.7rem;
+        color: #9bb8a5;
+        white-space: nowrap;
+      }
+      .icon {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #fff;
+        border-radius: 10px;
+        width: 40px;
+        height: 36px;
+        font-size: 1.1rem;
+      }
+      #btn-undo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ── HUD ─────────────────────────────────────────────── */
+      #hud {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 6px;
+      }
+      .hud-item {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 4px 9px;
+        min-width: 0;
+      }
+      .hud-item .k {
+        display: block;
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #8fb09a;
+      }
+      .hud-item .v {
+        display: block;
+        font-size: 0.86rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #h-game {
+        white-space: normal;
+        line-height: 1.2;
+      }
+      .hud-item .v small {
+        font-size: 0.68rem;
+        color: var(--gold);
+        margin-left: 2px;
+      }
+      .kon {
+        color: #ff8a8a;
+        font-weight: 800;
+      }
+
+      /* ── Table ───────────────────────────────────────────── */
+      #table {
+        position: relative;
+        flex: 1 1 0;
+        min-height: 210px;
+        max-height: 470px;
+        border-radius: 24px;
+        background: radial-gradient(
+          ellipse at center,
+          var(--felt-a),
+          var(--felt-b) 75%
+        );
+        border: 7px solid var(--wood);
+        box-shadow:
+          0 0 0 2px #8b6424,
+          0 10px 30px rgba(0, 0, 0, 0.6),
+          inset 0 0 60px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+      }
+      .seat {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        z-index: 2;
+        transition: opacity 0.2s;
+      }
+      .seat.p2 {
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .seat.p0 {
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .seat.p1 {
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        flex-direction: column;
+      }
+      .seat.p3 {
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        flex-direction: column;
+      }
+      .seat.out {
+        opacity: 0.4;
+      }
+      .tag {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid;
+        white-space: nowrap;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .t0 .tag {
+        border-color: var(--t0);
+        color: #d6e5ff;
+      }
+      .t1 .tag {
+        border-color: var(--t1);
+        color: #ffdcdc;
+      }
+      .tag .n {
+        opacity: 0.75;
+        font-size: 0.62rem;
+      }
+      .p1 .tag,
+      .p3 .tag {
+        flex-direction: column;
+        gap: 0;
+        line-height: 1.15;
+        padding: 2px 7px;
+        border-radius: 10px;
+      }
+      .seat.turn .tag {
+        border-color: var(--gold);
+        color: #fff;
+        animation: pulse 1.1s ease-in-out infinite;
+      }
+      .seat.win .tag {
+        background: var(--gold);
+        color: #221a00;
+        border-color: var(--gold);
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.3);
+        }
+        50% {
+          box-shadow:
+            0 0 0 4px rgba(245, 197, 66, 0.15),
+            0 0 16px rgba(245, 197, 66, 0.8);
+        }
+      }
+      .backs {
+        display: flex;
+      }
+      .p1 .backs,
+      .p3 .backs {
+        flex-direction: column;
+      }
+      .mini {
+        width: var(--mw);
+        height: calc(var(--mw) * 1.42);
+        border-radius: 3px;
+        background: repeating-linear-gradient(
+          45deg,
+          #2a3f9a 0 3px,
+          #22307a 3px 6px
+        );
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      .p2 .mini + .mini {
+        margin-left: calc(var(--mw) * -0.3);
+      }
+      .p1 .mini + .mini,
+      .p3 .mini + .mini {
+        margin-top: calc(var(--mw) * -0.95);
+      }
+
+      /* ── Trick ───────────────────────────────────────────── */
+      #trick {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(var(--tw) * 3.4);
+        height: calc(var(--tw) * 2.84 + 40px);
+      }
+      /* Po „Dalej” lewa odjeżdża do zwycięzcy */
+      #trick.sweep {
+        transition:
+          transform 0.3s ease-in,
+          opacity 0.3s ease-in;
+        opacity: 0;
+      }
+      #trick.sweep-0 {
+        transform: translate(-50%, calc(-50% + 160px)) scale(0.4);
+      }
+      #trick.sweep-2 {
+        transform: translate(-50%, calc(-50% - 160px)) scale(0.4);
+      }
+      #trick.sweep-1 {
+        transform: translate(calc(-50% - 160px), -50%) scale(0.4);
+      }
+      #trick.sweep-3 {
+        transform: translate(calc(-50% + 160px), -50%) scale(0.4);
+      }
+      #trump-mark {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: calc(var(--tw) * 2.6);
+        line-height: 1;
+        opacity: 0.1;
+        pointer-events: none;
+        color: #fff;
+      }
+      #trump-mark.red {
+        color: #ff4d4d;
+        opacity: 0.14;
+      }
+      .slot {
+        position: absolute;
+        width: var(--tw);
+        height: calc(var(--tw) * 1.42);
+      }
+      #slot-2 {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      #slot-0 {
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      #slot-1 {
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      #slot-3 {
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      #toast {
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background: rgba(0, 0, 0, 0.88);
+        border: 1px solid var(--gold);
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-weight: 700;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.25s;
+        z-index: 6;
+        text-align: center;
+        white-space: nowrap;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      /* ── Card ────────────────────────────────────────────── */
+      .card {
+        --w: var(--cw);
+        position: relative;
+        width: var(--w);
+        height: calc(var(--w) * 1.42);
+        border-radius: calc(var(--w) * 0.12);
+        background: linear-gradient(160deg, #fff, #f1ede0);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+        color: var(--blk);
+        flex-shrink: 0;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          opacity 0.15s;
+      }
+      .card.red {
+        color: var(--red);
+      }
+      .card.trump {
+        background: linear-gradient(160deg, #fffaf0, #f7e7b8);
+      }
+      .card .tl,
+      .card .br {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 0.95;
+        font-weight: 800;
+        font-size: calc(var(--w) * 0.24);
+        letter-spacing: -1px;
+      }
+      .card .tl {
+        top: calc(var(--w) * 0.06);
+        left: calc(var(--w) * 0.07);
+      }
+      .card .br {
+        bottom: calc(var(--w) * 0.06);
+        right: calc(var(--w) * 0.07);
+        transform: rotate(180deg);
+      }
+      .card i {
+        font-style: normal;
+        letter-spacing: 0;
+      }
+      .card .mid {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: calc(var(--w) * 0.5);
+      }
+      .slot .card {
+        --w: var(--tw);
+        transform: rotate(var(--rot, 0deg));
+      }
+      .slot .card.fresh {
+        animation: pop 0.25s ease-out;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: rotate(var(--rot, 0deg)) scale(0.4);
+        }
+      }
+      .slot .card.lead {
+        box-shadow:
+          0 0 0 2px var(--gold),
+          0 0 14px rgba(245, 197, 66, 0.7);
+      }
+      .slot .card.won {
+        box-shadow:
+          0 0 0 3px var(--gold),
+          0 0 22px rgba(245, 197, 66, 0.95);
+      }
+      .slot .card.lead::after,
+      .slot .card.won::after {
+        content: "👑";
+        position: absolute;
+        top: calc(var(--w) * -0.34);
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: calc(var(--w) * 0.3);
+        filter: drop-shadow(0 1px 2px #000);
+      }
+      #trick.done .card:not(.won) {
+        opacity: 0.6;
+      }
+
+      /* ── Action bar ──────────────────────────────────────── */
+      #bar {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 88px;
+      }
+      #status {
+        font-size: 0.88rem;
+        line-height: 1.4;
+        color: #dfeee3;
+      }
+      #actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      #actions:empty {
+        display: none;
+      }
+      .btn {
+        flex: 1 1 auto;
+        min-height: 42px;
+        padding: 7px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .btn small {
+        display: block;
+        font-size: 0.66rem;
+        font-weight: 400;
+        opacity: 0.85;
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, #ffd54a, #f0a500);
+        color: #1d1400;
+        border: none;
+      }
+      .btn.primary .s-red {
+        color: #b3001b;
+      }
+      .btn.primary .s-blk {
+        color: #111;
+      }
+      .btn.danger {
+        background: linear-gradient(135deg, #ff5a5a, #b31212);
+        border: none;
+      }
+      .btn.suit {
+        flex: 1 1 22%;
+        font-size: 1rem;
+      }
+      .btn.sm {
+        flex: 1 1 30%;
+        font-size: 0.8rem;
+        padding: 6px;
+      }
+      .btn.half {
+        flex: 1 1 45%;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      @media (hover: hover) {
+        .btn:hover {
+          filter: brightness(1.12);
+        }
+      }
+
+      /* ── Hand ────────────────────────────────────────────── */
+      #hand {
+        display: flex;
+        justify-content: center;
+        gap: clamp(3px, 1vw, 8px);
+        padding: 16px 2px 4px;
+        min-height: calc(var(--cw) * 1.42 + 20px);
+        border-radius: 16px;
+        transition: background 0.3s;
+      }
+      #hand.my-turn {
+        background: radial-gradient(
+          ellipse at 50% 100%,
+          rgba(245, 197, 66, 0.2),
+          transparent 70%
+        );
+      }
+      #hand .card.deal {
+        animation: dealIn 0.35s ease-out backwards;
+      }
+      @keyframes dealIn {
+        from {
+          opacity: 0;
+          transform: translateY(-60px) scale(0.7) rotate(-8deg);
+        }
+      }
+      #hand .card.shake {
+        animation: shake 0.35s;
+      }
+      @keyframes shake {
+        20%,
+        60% {
+          transform: translateX(-6px);
+        }
+        40%,
+        80% {
+          transform: translateX(6px);
+        }
+      }
+      .key {
+        display: inline-block;
+        min-width: 16px;
+        padding: 0 4px;
+        margin-right: 3px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        font-size: 0.7rem;
+        text-align: center;
+      }
+      .more {
+        margin-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 8px;
+      }
+      .more summary {
+        cursor: pointer;
+        color: #9fc4aa;
+        font-size: 0.85rem;
+        padding: 4px 0;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      #hand.out {
+        opacity: 0.45;
+      }
+      #hand .card.ok {
+        cursor: pointer;
+      }
+      #hand .card.no {
+        opacity: 0.42;
+        filter: saturate(0.3);
+      }
+      #hand .card.sel {
+        transform: translateY(-14px);
+        box-shadow:
+          0 0 0 3px var(--gold),
+          0 8px 16px rgba(0, 0, 0, 0.5);
+      }
+      @media (hover: hover) {
+        #hand .card.ok:hover {
+          transform: translateY(-8px);
+        }
+        #hand .card.sel:hover {
+          transform: translateY(-14px);
+        }
+      }
+
+      /* ── Log ─────────────────────────────────────────────── */
+      #logbox {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+      #logbox summary {
+        cursor: pointer;
+        color: #9fc4aa;
+      }
+      #log {
+        list-style: none;
+        max-height: 200px;
+        overflow: auto;
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        user-select: text;
+      }
+      #log li {
+        color: #cfe0d4;
+      }
+      #log li.h {
+        color: var(--gold);
+        margin-top: 4px;
+        font-weight: 700;
+      }
+
+      /* ── Overlays ────────────────────────────────────────── */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 12, 7, 0.82);
+        backdrop-filter: blur(3px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 50;
+      }
+      .overlay.show {
+        display: flex;
+      }
+      #rules {
+        z-index: 60;
+      }
+      .sheet {
+        width: min(460px, 100%);
+        max-height: calc(100dvh - 32px);
+        overflow: auto;
+        background: linear-gradient(180deg, #143722, #0c2416);
+        border: 1px solid rgba(245, 197, 66, 0.35);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+      .sheet h2 {
+        color: var(--gold);
+        font-size: 1.25rem;
+        margin-bottom: 10px;
+      }
+      .big-title {
+        font-size: 3.4rem;
+        text-align: center;
+        color: var(--gold);
+        font-weight: 900;
+        letter-spacing: 4px;
+        text-shadow: 0 3px 12px #000;
+      }
+      .sub {
+        text-align: center;
+        color: #9fc4aa;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+      }
+      .opt {
+        margin: 12px 0;
+      }
+      .opt .lbl {
+        font-size: 0.72rem;
+        color: #9fc4aa;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .seg {
+        display: flex;
+        gap: 6px;
+      }
+      .seg button {
+        flex: 1;
+        min-height: 40px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.06);
+        color: #dfe;
+      }
+      .seg button.on {
+        background: var(--gold);
+        color: #1d1400;
+        border-color: var(--gold);
+        font-weight: 700;
+      }
+      .sw {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 0;
+        font-size: 0.92rem;
+        cursor: pointer;
+      }
+      .sw input {
+        width: 22px;
+        height: 22px;
+        accent-color: var(--gold);
+        flex-shrink: 0;
+      }
+      .sheet .btns {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .res-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+        margin: 6px 0;
+      }
+      .res-table td {
+        padding: 6px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: top;
+      }
+      .res-table td:first-child {
+        color: #9fc4aa;
+        white-space: nowrap;
+        padding-right: 10px;
+      }
+      .res-table td:last-child {
+        text-align: right;
+        font-weight: 600;
+      }
+      .hint {
+        font-size: 0.72rem;
+        color: #8fb09a;
+        margin-top: 4px;
+      }
+      .icon:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .hud-item .v.pts-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .pt-tog {
+        width: 24px;
+        height: 22px;
+        padding: 0;
+        flex-shrink: 0;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 0.72rem;
+        line-height: 1;
+      }
+      .pt-tog.off {
+        background: rgba(255, 123, 123, 0.18);
+        border-color: #ff7b7b;
+      }
+      .btn.tip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 4px 10px;
+        font-size: 0.76rem;
+        background: transparent;
+        border: 1px dashed var(--gold);
+        color: #ffe7a3;
+      }
+      #btn-last {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+        z-index: 4;
+        font-size: 0.68rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(0, 0, 0, 0.45);
+        color: #dfe;
+      }
+      #btn-last:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      #last-trick {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+      }
+      #last-trick.show {
+        display: flex;
+      }
+      .lt-box {
+        background: #0f2c1b;
+        border: 1px solid var(--gold);
+        border-radius: 14px;
+        padding: 10px 12px;
+        text-align: center;
+        font-size: 0.85rem;
+      }
+      .lt-cards {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin: 10px 0 6px;
+      }
+      .lt-cards .card {
+        --w: var(--tw);
+      }
+      .lt-cards .won .card {
+        box-shadow:
+          0 0 0 3px var(--gold),
+          0 0 14px rgba(245, 197, 66, 0.7);
+      }
+      .lt-cards .who {
+        font-size: 0.66rem;
+        margin-top: 4px;
+      }
+      .btn.claim {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        min-height: 32px;
+        padding: 4px 10px;
+        font-size: 0.76rem;
+        background: transparent;
+        border: 1px dashed #ff7b7b;
+        color: #ffb3b3;
+      }
+      .names {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 10px;
+        align-items: center;
+        font-size: 0.82rem;
+      }
+      .names input {
+        min-width: 0;
+        padding: 8px 10px;
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.3);
+        color: #fff;
+        font: inherit;
+        user-select: text;
+      }
+      #histbox {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+      #histbox summary,
+      .ana summary {
+        cursor: pointer;
+        color: #9fc4aa;
+      }
+      .chart {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 6px 0;
+      }
+      .res-table.small td {
+        font-size: 0.78rem;
+        padding: 4px 3px;
+      }
+      .t0c {
+        color: var(--t0);
+      }
+      .t1c {
+        color: var(--t1);
+      }
+      .ana {
+        margin-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 8px;
+      }
+      .ana summary {
+        font-weight: 700;
+        color: var(--gold);
+      }
+      .ana h3 {
+        color: var(--gold);
+        font-size: 0.82rem;
+        margin: 10px 0 2px;
+      }
+      .ana .res-table td:last-child {
+        white-space: nowrap;
+      }
+      .adv {
+        font-size: 0.8rem;
+        line-height: 1.5;
+        padding-left: 16px;
+      }
+      p.adv {
+        padding-left: 0;
+      }
+      .adv.ok {
+        color: #8fe3a5;
+      }
+
+      /* ── Koniec meczu ─────────────────────────────────────────── */
+      #victory {
+        z-index: 55;
+      }
+      #confetti {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #confetti i {
+        position: absolute;
+        top: -20px;
+        width: 9px;
+        height: 14px;
+        border-radius: 2px;
+        opacity: 0.9;
+        animation: fall linear infinite;
+      }
+      @keyframes fall {
+        to {
+          transform: translate(var(--dx), 110vh) rotate(var(--r));
+        }
+      }
+      .vict {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        border: 2px solid var(--gold);
+        box-shadow:
+          0 0 60px rgba(245, 197, 66, 0.35),
+          0 20px 50px rgba(0, 0, 0, 0.6);
+        animation: popIn 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(0.6);
+        }
+      }
+      .trophy {
+        font-size: 4.5rem;
+        animation: bounce 1.2s ease-in-out infinite;
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+      }
+      @keyframes bounce {
+        50% {
+          transform: translateY(-10px) scale(1.06);
+        }
+      }
+      .v-title {
+        font-size: 2.3rem;
+        font-weight: 900;
+        letter-spacing: 3px;
+        margin: 4px 0;
+        background: linear-gradient(180deg, #fff3b0, #f5c542 55%, #c98a00);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .v-score {
+        font-size: 2.2rem;
+        font-weight: 900;
+        margin: 10px 0 6px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .v-score .t0 {
+        color: var(--t0);
+      }
+      .v-score .t1 {
+        color: var(--t1);
+      }
+      .v-score b {
+        color: #fff;
+      }
+      .vict .res-table td:first-child {
+        text-align: left;
+      }
+      #victory.lose .vict {
+        border-color: #777;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+      #victory.lose .v-title {
+        background: linear-gradient(180deg, #eee, #999);
+        -webkit-background-clip: text;
+        background-clip: text;
+      }
+      #victory.lose .trophy {
+        animation: none;
+      }
+      .rules {
+        font-size: 0.86rem;
+        line-height: 1.5;
+        color: #d6e6da;
+      }
+      .rules h3 {
+        color: var(--gold);
+        font-size: 0.92rem;
+        margin: 12px 0 4px;
+      }
+      .rules ul {
+        padding-left: 18px;
+      }
+      .rules li {
+        margin: 2px 0;
+      }
+
+      @media (max-width: 400px) {
+        .brand {
+          font-size: 1.05rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header id="top">
+        <div class="brand">♠66♥</div>
+        <div class="match">
+          <span class="chip t0">My <b id="m0">0</b></span>
+          <span class="to">do <b id="mt">66</b></span>
+          <span class="chip t1"><b id="m1">0</b> Oni</span>
+        </div>
+        <button
+          class="icon"
+          id="btn-undo"
+          aria-label="Cofnij ruch"
+          title="Cofnij ruch"
+          disabled
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        <button class="icon" id="btn-menu" aria-label="Menu">☰</button>
+      </header>
+
+      <div id="hud">
+        <div class="hud-item">
+          <span class="k">Atut</span><span class="v" id="h-trump">—</span>
+        </div>
+        <div class="hud-item">
+          <span class="k">Gra</span><span class="v" id="h-game">—</span>
+        </div>
+        <div class="hud-item">
+          <span class="k">Punkty My : Oni</span>
+          <span class="v pts-row"
+            ><button class="pt-tog" id="tog-mine"></button
+            ><span id="h-pts">—</span
+            ><button class="pt-tog" id="tog-opp"></button
+          ></span>
+        </div>
+      </div>
+
+      <main id="table">
+        <div class="seat p2 t0" id="seat-2"></div>
+        <div class="seat p1 t1" id="seat-1"></div>
+        <div class="seat p3 t1" id="seat-3"></div>
+        <div class="seat p0 t0" id="seat-0"></div>
+        <div id="trump-mark"></div>
+        <button
+          id="btn-last"
+          aria-label="Ostatnia lewa"
+          title="Ostatnia lewa (L)"
+          disabled
+        >
+          ↺ lewa
+        </button>
+        <div id="last-trick"></div>
+        <div id="trick">
+          <div class="slot" id="slot-2"></div>
+          <div class="slot" id="slot-1"></div>
+          <div class="slot" id="slot-3"></div>
+          <div class="slot" id="slot-0"></div>
+        </div>
+        <div id="toast"></div>
+      </main>
+
+      <div id="bar">
+        <div id="status">Witaj w 66!</div>
+        <div id="actions"></div>
+      </div>
+
+      <div id="hand"></div>
+
+      <details id="logbox">
+        <summary>Historia rozdania</summary>
+        <ol id="log"></ol>
+      </details>
+
+      <details id="histbox">
+        <summary>Historia meczu</summary>
+        <div id="hist"></div>
+      </details>
+    </div>
+
+    <!-- START -->
+    <div class="overlay show" id="start">
+      <div class="sheet">
+        <div class="big-title">66</div>
+        <p class="sub">
+          Gra karciana w parach · Ty + Partner kontra dwóch przeciwników
+        </p>
+        <div class="btns">
+          <button class="btn primary" id="btn-continue" hidden></button>
+          <button class="btn primary" id="btn-start">▶ Rozpocznij grę</button>
+          <button class="btn" data-open="rules">📖 Zasady</button>
+          <button class="btn btn-install" hidden>📲 Zainstaluj</button>
+        </div>
+        <p class="hint" id="save-hint"></p>
+        <div class="opt">
+          <div class="lbl">Mecz do (dużych punktów)</div>
+          <div class="seg" data-key="target">
+            <button data-val="11">11</button><button data-val="21">21</button
+            ><button data-val="33">33</button><button data-val="66">66</button>
+          </div>
+        </div>
+        <div class="opt">
+          <div class="lbl">Poziom przeciwników</div>
+          <div class="seg" data-key="level">
+            <button data-val="easy">Łatwy</button
+            ><button data-val="normal">Średni</button
+            ><button data-val="hard">Trudny</button>
+          </div>
+          <p class="hint">Partner zawsze gra najlepiej, jak potrafi.</p>
+        </div>
+        <details class="more">
+          <summary>⚙ Więcej ustawień</summary>
+          <div class="opt">
+            <div class="lbl">Imiona graczy</div>
+            <div class="names">
+              <span>Partner</span
+              ><input data-name="2" maxlength="12" placeholder="Partner" />
+              <span>Lewy przeciwnik</span
+              ><input data-name="1" maxlength="12" placeholder="Zachód" />
+              <span>Prawy przeciwnik</span
+              ><input data-name="3" maxlength="12" placeholder="Wschód" />
+            </div>
+          </div>
+          <div class="opt">
+            <div class="lbl">Tempo przeciwników</div>
+            <div class="seg" data-key="speed">
+              <button data-val="slow">Wolne</button
+              ><button data-val="normal">Normalne</button
+              ><button data-val="fast">Szybkie</button>
+            </div>
+          </div>
+          <div class="opt">
+            <div class="lbl">Pierwszy wybiera atut</div>
+            <div class="seg" data-key="first">
+              <button data-val="me">Ty</button
+              ><button data-val="random">Losowo</button>
+            </div>
+          </div>
+          <label class="sw"
+            >Czekaj na „Dalej” po każdej lewie
+            <input type="checkbox" data-key="manualNext"
+          /></label>
+          <label class="sw"
+            >Zagrywaj kartę jednym dotknięciem
+            <input type="checkbox" data-key="oneClick"
+          /></label>
+          <label class="sw"
+            >Ukryj punkty przeciwników
+            <input type="checkbox" data-key="hideOpp"
+          /></label>
+          <label class="sw"
+            >Ukryj nasze punkty — sam ogłaszasz „Mam 66!”
+            <input type="checkbox" data-key="hideMine"
+          /></label>
+          <label class="sw"
+            >Dźwięki <input type="checkbox" data-key="sound"
+          /></label>
+          <label class="sw"
+            >Wibracje (telefony z Androidem)
+            <input type="checkbox" data-key="vibrate"
+          /></label>
+          <p class="hint">
+            Na komputerze: <span class="key">1</span>–<span class="key">6</span>
+            wybór karty, <span class="key">Enter</span> potwierdzenie / Dalej,
+            <span class="key">H</span> podpowiedź,
+            <span class="key">L</span> ostatnia lewa,
+            <span class="key">U</span> cofnij,
+            <span class="key">Esc</span> zamknij okno.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="overlay" id="menu">
+      <div class="sheet">
+        <h2>Ustawienia</h2>
+        <div class="opt">
+          <div class="lbl">Poziom przeciwników</div>
+          <div class="seg" data-key="level">
+            <button data-val="easy">Łatwy</button
+            ><button data-val="normal">Średni</button
+            ><button data-val="hard">Trudny</button>
+          </div>
+        </div>
+        <div class="opt">
+          <div class="lbl">Imiona graczy</div>
+          <div class="names">
+            <span>Partner</span
+            ><input data-name="2" maxlength="12" placeholder="Partner" />
+            <span>Lewy przeciwnik</span
+            ><input data-name="1" maxlength="12" placeholder="Zachód" />
+            <span>Prawy przeciwnik</span
+            ><input data-name="3" maxlength="12" placeholder="Wschód" />
+          </div>
+        </div>
+        <div class="opt">
+          <div class="lbl">Tempo przeciwników</div>
+          <div class="seg" data-key="speed">
+            <button data-val="slow">Wolne</button
+            ><button data-val="normal">Normalne</button
+            ><button data-val="fast">Szybkie</button>
+          </div>
+        </div>
+        <label class="sw"
+          >Czekaj na „Dalej” po każdej lewie
+          <input type="checkbox" data-key="manualNext"
+        /></label>
+        <label class="sw"
+          >Zagrywaj kartę jednym dotknięciem
+          <input type="checkbox" data-key="oneClick"
+        /></label>
+        <label class="sw"
+          >Ukryj punkty przeciwników <input type="checkbox" data-key="hideOpp"
+        /></label>
+        <label class="sw"
+          >Ukryj nasze punkty — sam ogłaszasz „Mam 66!”
+          <input type="checkbox" data-key="hideMine"
+        /></label>
+        <label class="sw"
+          >Dźwięki <input type="checkbox" data-key="sound"
+        /></label>
+        <label class="sw"
+          >Wibracje (telefony z Androidem)
+          <input type="checkbox" data-key="vibrate"
+        /></label>
+        <div class="btns">
+          <button class="btn primary" data-close="menu">Wróć do gry</button>
+          <button class="btn" data-open="rules">📖 Zasady</button>
+          <button class="btn btn-install" hidden>📲 Zainstaluj</button>
+          <button class="btn danger" id="btn-newgame">🏠 Ekran startowy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONIEC MECZU -->
+    <div class="overlay" id="victory">
+      <div id="confetti"></div>
+      <div class="sheet vict">
+        <div class="trophy" id="v-icon">🏆</div>
+        <div class="v-title" id="v-title">ZWYCIĘSTWO!</div>
+        <p class="sub" id="v-sub"></p>
+        <div class="v-score">
+          <span class="t0">My <b id="v0"></b></span>:<span class="t1"
+            ><b id="v1"></b> Oni</span
+          >
+        </div>
+        <div id="v-chart"></div>
+        <table class="res-table" id="v-stats"></table>
+        <div class="btns">
+          <button class="btn primary" id="v-new">▶ Zagraj jeszcze raz</button>
+          <button class="btn" id="v-settings">⚙ Ustawienia</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL (wynik) -->
+    <div class="overlay" id="modal">
+      <div class="sheet">
+        <h2 id="m-title"></h2>
+        <div id="m-body"></div>
+        <div class="btns" id="m-btns"></div>
+      </div>
+    </div>
+
+    <!-- ZASADY -->
+    <div class="overlay" id="rules">
+      <div class="sheet rules">
+        <h2>Zasady 66 (wersja domowa)</h2>
+        <h3>Talia i rozdanie</h3>
+        <ul>
+          <li>
+            24 karty: 9, J, Q, K, 10, A. Czterech graczy, dwie drużyny: Ty +
+            Partner (naprzeciwko) kontra Zachód + Wschód.
+          </li>
+          <li>Każdy dostaje 3 karty, a po wyborze atutu kolejne 3.</li>
+          <li>
+            Starszeństwo: 9 &lt; J &lt; Q &lt; K &lt; 10 &lt; A. Wartości: A 11,
+            10 10, K 4, Q 3, J 2, 9 0. Ostatnia lewa +10.
+          </li>
+        </ul>
+        <h3>Wybór atutu (z 3 kart)</h3>
+        <ul>
+          <li>Co rozdanie wybiera kolejny gracz.</li>
+          <li>
+            Może wybrać atut, poprosić partnera (wtedy partner wybiera atut i to
+            on rozgrywa) albo od razu zagrać Lepszą / Gorszą z 3 (×2).
+          </li>
+          <li>Przeciwnicy mogą od razu dać <b>kontrę z 3</b> (×4).</li>
+        </ul>
+        <h3>Rodzaj gry (po 6 kartach)</h3>
+        <ul>
+          <li>
+            <b>Z pytaniem</b> — rozgrywający z partnerem muszą zdobyć 66 pkt.
+            Pozostali po kolei akceptują albo przejmują grę jako Lepszą / Gorszą
+            (pierwszy chętny rozgrywa, wcześniejsza kontra przepada).
+          </li>
+          <li>
+            <b>Bez pytania</b> (×2) — rozgrywający sam musi zdobyć 66 pkt. Lewy
+            wzięte przez jego partnera nie liczą się nikomu, więc partner
+            dorzuca punkty i unika brania lew.
+          </li>
+          <li>
+            <b>Lepsza</b> — trzeba wziąć wszystkie lewy. <b>Gorsza</b> — nie
+            wolno wziąć żadnej. Obie bez atutu, partner rozgrywającego pauzuje.
+          </li>
+          <li>
+            Przeciwnicy mogą dać <b>kontrę</b> (×2), drużyna rozgrywającego może
+            odpowiedzieć <b>rekontrą</b> (×2).
+          </li>
+        </ul>
+        <h3>Zagrywanie</h3>
+        <ul>
+          <li>
+            Pierwszą lewę wychodzi rozgrywający, kolejne — zwycięzca lewy.
+          </li>
+          <li>
+            Trzeba dołożyć do koloru i przebić najwyższą kartę w lewie, jeśli
+            się da.
+          </li>
+          <li>
+            Bez koloru trzeba dać atut (przebijając, jeśli się da). Bez atutu —
+            dowolna karta.
+          </li>
+          <li>
+            <b>Meldunek</b>: wychodząc K lub Q z parą K+Q — 20 pkt, w atucie 40.
+            Liczy się dopiero, gdy drużyna weźmie lewę. W grze bez pytania
+            partner rozgrywającego nie melduje.
+          </li>
+        </ul>
+        <h3>Koniec rozdania i punktacja</h3>
+        <ul>
+          <li>
+            Rozdanie kończy się, gdy któraś strona osiągnie 66 pkt (albo gdy
+            rozstrzygnie się Lepsza / Gorsza).
+          </li>
+          <li>
+            Jeśli po wszystkich lewach nikt nie ma 66 (65 : 65), wygrywa
+            drużyna, która wzięła ostatnią lewę.
+          </li>
+          <li>
+            <b>Tryb treningowy „Ukryj nasze punkty”</b>: Twoja drużyna nie
+            kończy rozdania automatycznie — musisz sam policzyć punkty i
+            nacisnąć <b>✋ Mam 66!</b> (w swoim ruchu albo po lewie). Błędne 66
+            oddaje rozdanie przeciwnikom: 2 pkt (3, jeśli nie macie lewy). Jeśli
+            nikt nie ogłosi, decyduje ostatnia lewa.
+          </li>
+          <li>
+            Z pytaniem: 1 pkt, 2 gdy przegrani mają &lt;33 (Schneider), 3 gdy
+            nie wzięli lewy (Schwarz). Bez pytania ×2. Lepsza / Gorsza: 6 (z 3:
+            12).
+          </li>
+          <li>
+            Kontra ×2 (z 3: ×4), rekontra dodatkowo ×2. Gdy rozgrywający
+            przegra, punkty dostają przeciwnicy.
+          </li>
+          <li>
+            Mecz wygrywa drużyna, która pierwsza zdobędzie ustaloną liczbę
+            dużych punktów (domyślnie 66).
+          </li>
+        </ul>
+        <div class="btns">
+          <button class="btn primary" data-close="rules">Zamknij</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      // ================================================================
+      // STAŁE I NARZĘDZIA
+      // ================================================================
+      const $ = (id) => document.getElementById(id);
+      const SUITS = ["♠", "♥", "♣", "♦"];
+      const SNAME = { "♠": "Pik", "♥": "Kier", "♦": "Karo", "♣": "Trefl" };
+      const RED = new Set(["♥", "♦"]);
+      const RANKS = ["9", "J", "Q", "K", "10", "A"];
+      const ORD = { 9: 0, J: 1, Q: 2, K: 3, 10: 4, A: 5 };
+      const VAL = { 9: 0, J: 2, Q: 3, K: 4, 10: 10, A: 11 };
+      // 0=Ty (S), 1=Zachód, 2=Partner (N), 3=Wschód — ruch zgodnie z tą kolejnością
+      const TEAM = [0, 1, 0, 1];
+      const DEFAULT_NAMES = ["Ty", "Zachód", "Partner", "Wschód"];
+      const NAMES = [...DEFAULT_NAMES];
+      const SPEED = { slow: 1100, normal: 700, fast: 350 };
+      const CANCEL = Symbol("cancel");
+
+      const partnerOf = (p) => (p + 2) % 4;
+      const cid = (c) => c.r + c.s;
+      const same = (a, b) => !!a && !!b && a.r === b.r && a.s === b.s;
+      const isT = (c, T) => !!T && c.s === T;
+      const suitH = (s) =>
+        `<span class="${RED.has(s) ? "s-red" : "s-blk"}">${s}</span>`;
+      const cardH = (c) => `<b>${c.r}</b>${suitH(c.s)}`;
+      const R = (card, meld = false, why = "") => ({ card, meld, why });
+      // Dopełniacz nazw kolorów: „nie ma pik / kier / karo / trefl”
+      const SGEN = { "♠": "pik", "♥": "kier", "♦": "karo", "♣": "trefl" };
+
+      function shuffle(a) {
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+      function buildDeck() {
+        const d = [];
+        for (const s of SUITS)
+          for (const r of RANKS) d.push({ s, r, v: VAL[r] });
+        return d;
+      }
+      function beatsT(c, b, T) {
+        const ct = isT(c, T),
+          bt = isT(b, T);
+        if (ct && !bt) return true;
+        if (!ct && bt) return false;
+        return c.s === b.s && ORD[c.r] > ORD[b.r];
+      }
+      function bestOf(trick, T) {
+        let b = trick[0];
+        for (const e of trick.slice(1)) if (beatsT(e.card, b.card, T)) b = e;
+        return b;
+      }
+      const trickPts = (trick) => trick.reduce((s, e) => s + e.card.v, 0);
+      function cheap(arr, T) {
+        return [...arr].sort(
+          (a, b) => a.v - b.v || isT(a, T) - isT(b, T) || ORD[a.r] - ORD[b.r],
+        )[0];
+      }
+      function rich(arr, T) {
+        return [...arr].sort(
+          (a, b) => b.v - a.v || isT(a, T) - isT(b, T) || ORD[b.r] - ORD[a.r],
+        )[0];
+      }
+      // Lepsza pewna: w każdym kolorze karty tworzą nieprzerwaną sekwencję od asa
+      function sureLepsza(h) {
+        if (h.length < 6) return false;
+        return SUITS.every((s) =>
+          h
+            .filter((c) => c.s === s)
+            .map((c) => ORD[c.r])
+            .sort((a, b) => b - a)
+            .every((o, i) => o === 5 - i),
+        );
+      }
+      function sureGorsza(h) {
+        return (
+          h.length === 6 &&
+          h.every((c) => ORD[c.r] <= 1) &&
+          h.filter((c) => c.r === "J").length <= 1
+        );
+      }
+      function handEst(hand, T) {
+        let e = 0;
+        const has = (s, r) => hand.some((x) => x.s === s && x.r === r);
+        for (const c of hand) {
+          if (isT(c, T)) e += 6 + c.v;
+          else if (c.r === "A") e += 13;
+          else if (c.r === "10") e += has(c.s, "A") ? 11 : 3;
+          else if (c.r === "K") e += has(c.s, "A") && has(c.s, "10") ? 5 : 1;
+        }
+        for (const s of SUITS)
+          if (has(s, "K") && has(s, "Q")) e += s === T ? 40 : 20;
+        return e;
+      }
+
+      // ================================================================
+      // USTAWIENIA
+      // ================================================================
+      const DEFAULTS = {
+        target: 66,
+        speed: "normal",
+        manualNext: true,
+        oneClick: false,
+        first: "me",
+        hideOpp: false,
+        hideMine: false,
+        sound: true,
+        vibrate: true,
+        level: "normal",
+        names: {},
+      };
+      const LEVELS = { easy: "Łatwy", normal: "Średni", hard: "Trudny" };
+      let S = loadSettings();
+      function loadSettings() {
+        try {
+          return {
+            ...DEFAULTS,
+            ...JSON.parse(localStorage.getItem("g66") || "{}"),
+          };
+        } catch {
+          return { ...DEFAULTS };
+        }
+      }
+      function saveSettings() {
+        try {
+          localStorage.setItem("g66", JSON.stringify(S));
+        } catch {
+          /* tryb prywatny */
+        }
+      }
+      const escH = (s) =>
+        s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      // Imiona trafiają do innerHTML, więc są escapowane
+      function applyNames() {
+        for (const p of [1, 2, 3]) {
+          const n = ((S.names || {})[p] || "").trim();
+          NAMES[p] = n ? escH(n) : DEFAULT_NAMES[p];
+        }
+      }
+      const cardOf = (id) => ({ r: id.slice(0, -1), s: id.slice(-1) });
+      const sortCards = (cards) =>
+        [...cards].sort(
+          (a, b) =>
+            SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || ORD[b.r] - ORD[a.r],
+        );
+      const delay = () => SPEED[S.speed] || 700;
+
+      // ================================================================
+      // DŹWIĘK I WIBRACJE
+      // ================================================================
+      let AC = null;
+      function tone(f, d, { type = "sine", vol = 0.07, at = 0 } = {}) {
+        if (!S.sound) return;
+        try {
+          AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          const t = AC.currentTime + at;
+          const o = AC.createOscillator(),
+            g = AC.createGain();
+          o.type = type;
+          o.frequency.value = f;
+          g.gain.setValueAtTime(vol, t);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+          o.connect(g).connect(AC.destination);
+          o.start(t);
+          o.stop(t + d + 0.02);
+        } catch {
+          /* brak Web Audio */
+        }
+      }
+      const buzz = (p) =>
+        S.vibrate && navigator.vibrate && navigator.vibrate(p);
+      const arp = (fs, step, opts = {}) =>
+        fs.forEach((f, i) =>
+          tone(f, opts.d || 0.15, { ...opts, at: i * step }),
+        );
+      const SFX = {
+        card: () =>
+          tone(420 + Math.random() * 60, 0.05, { type: "triangle", vol: 0.05 }),
+        turn: () => {
+          tone(880, 0.09, { vol: 0.05 });
+          buzz(25);
+        },
+        trickUs: () => arp([660, 880], 0.08, { d: 0.12 }),
+        trickThem: () => arp([440, 330], 0.08, { d: 0.12 }),
+        bad: () => {
+          tone(160, 0.12, { type: "square", vol: 0.04 });
+          buzz([20, 40, 20]);
+        },
+        kontra: () => {
+          arp([220, 165], 0.12, { type: "sawtooth", vol: 0.05, d: 0.2 });
+          buzz(60);
+        },
+        meld: () => arp([523, 659, 784], 0.08, { d: 0.12 }),
+        win: () => arp([523, 659, 784, 1047], 0.1, { d: 0.16 }),
+        lose: () => arp([392, 330, 262], 0.12, { type: "triangle", d: 0.2 }),
+        victory: () => {
+          arp([523, 659, 784, 1047, 784, 1047], 0.13, { vol: 0.08, d: 0.2 });
+          buzz([60, 40, 60, 40, 120]);
+        },
+      };
+
+      // ================================================================
+      // ZAPIS STANU GRY (localStorage + opcjonalnie Google Apps Script)
+      // ================================================================
+      const SAVE_KEY = "g66-save";
+      const CLOUD =
+        typeof google !== "undefined" && google.script && google.script.run;
+      let saveMem = null;
+      let cloudTimer = null;
+
+      function readSave() {
+        try {
+          const s = JSON.parse(localStorage.getItem(SAVE_KEY) || "null");
+          if (s && s.v === 1) return s;
+        } catch {
+          /* brak dostępu do localStorage */
+        }
+        return saveMem;
+      }
+      function writeSave(data) {
+        const json = data ? JSON.stringify(data) : "";
+        saveMem = data ? JSON.parse(json) : null;
+        try {
+          if (data) localStorage.setItem(SAVE_KEY, json);
+          else localStorage.removeItem(SAVE_KEY);
+        } catch {
+          /* brak dostępu do localStorage */
+        }
+        if (CLOUD) {
+          clearTimeout(cloudTimer);
+          cloudTimer = setTimeout(() => google.script.run.saveState(json), 800);
+        }
+      }
+      function syncFromCloud() {
+        if (!CLOUD) return;
+        google.script.run
+          .withSuccessHandler((json) => {
+            if (!json) return;
+            try {
+              const c = JSON.parse(json),
+                l = readSave();
+              if (c.v !== 1 || (l && l.savedAt >= c.savedAt)) return;
+              saveMem = c;
+              try {
+                localStorage.setItem(SAVE_KEY, json);
+              } catch {
+                /* wystarczy kopia w pamięci */
+              }
+              refreshContinue();
+            } catch {
+              /* uszkodzony zapis — ignorujemy */
+            }
+          })
+          .loadState();
+      }
+      // play: null = początek rozdania, {t, leader, trick} = stan rozgrywki
+      function snapPlay(play) {
+        return {
+          t: play.t,
+          leader: play.leader,
+          trick: play.trick,
+          hands: G.hands,
+          tricks: G.tricks,
+          pts: G.pts,
+          pending: G.pending,
+          trump: G.trump,
+          contract: G.contract,
+          kontra: G.kontra,
+          kontraZ3: G.kontraZ3,
+          active: G.active,
+          tlog: G.tlog,
+          adv: G.adv,
+          melds: G.melds,
+          start: G.start,
+          ai: AIS.map(
+            (a) =>
+              a && {
+                played: [...a.played],
+                voids: a.voids.map((s) => [...s]),
+              },
+          ),
+        };
+      }
+      function saveGame(play = null) {
+        writeSave({
+          v: 1,
+          savedAt: Date.now(),
+          match: G.match,
+          target: G.target,
+          handNo: G.handNo,
+          chooser: G.chooser,
+          stats: G.stats,
+          history: G.history,
+          hand: { deck: G.deck0, play: play && snapPlay(play) },
+        });
+      }
+      function saveBetweenHands() {
+        writeSave({
+          v: 1,
+          savedAt: Date.now(),
+          match: G.match,
+          target: G.target,
+          handNo: G.handNo,
+          chooser: (G.chooser + 1) % 4,
+          stats: G.stats,
+          history: G.history,
+          hand: null,
+        });
+      }
+      function restorePlay(p) {
+        Object.assign(G, {
+          trick: p.trick,
+          hands: p.hands,
+          tricks: p.tricks,
+          pts: p.pts,
+          pending: p.pending,
+          trump: p.trump,
+          contract: p.contract,
+          kontra: p.kontra,
+          kontraZ3: p.kontraZ3,
+          rekontraDone: true,
+          active: p.active,
+          tlog: p.tlog || [],
+          adv: p.adv || [],
+          melds: p.melds || [],
+          start: p.start || null,
+        });
+        p.ai.forEach((m, i) => {
+          if (!m) return;
+          AIS[i].played = new Set(m.played);
+          AIS[i].voids = m.voids.map((v) => new Set(v));
+        });
+      }
+      function refreshContinue() {
+        const s = readSave(),
+          b = $("btn-continue");
+        b.hidden = !s;
+        if (s)
+          b.innerHTML = `▶ Kontynuuj grę<small>rozdanie ${s.hand ? s.handNo : s.handNo + 1} · My ${s.match[0]} : ${s.match[1]} Oni · do ${s.target}</small>`;
+        $("btn-start").className = "btn" + (s ? "" : " primary");
+        $("btn-start").innerHTML = s ? "↺ Nowa gra" : "▶ Rozpocznij grę";
+        $("save-hint").textContent = CLOUD
+          ? "Postęp zapisuje się automatycznie na Twoim koncie Google."
+          : "Postęp zapisuje się automatycznie w tej przeglądarce.";
+      }
+
+      // ================================================================
+      // AI — każdy gracz osobno; widzi tylko swoją rękę i to, co publiczne
+      // ================================================================
+      class AI {
+        constructor(pi) {
+          this.pi = pi;
+          this.reset();
+        }
+        reset() {
+          this.played = new Set();
+          this.voids = [0, 1, 2, 3].map(() => new Set());
+        }
+        // Partner zawsze gra na pełnym poziomie; trudność dotyczy przeciwników
+        lvl() {
+          return TEAM[this.pi] === 0 ? "hard" : S.level;
+        }
+        observe(pi, card, led, T) {
+          const l = this.lvl();
+          if (l === "easy") return;
+          this.played.add(cid(card));
+          if (l === "hard" && led && card.s !== led) {
+            this.voids[pi].add(led);
+            if (T && card.s !== T) this.voids[pi].add(T);
+          }
+        }
+        unseenHigher(card, hand) {
+          return RANKS.filter(
+            (r) =>
+              ORD[r] > ORD[card.r] &&
+              !this.played.has(r + card.s) &&
+              !hand.some((x) => x.r === r && x.s === card.s),
+          ).length;
+        }
+        isTop(card, hand) {
+          return this.unseenHigher(card, hand) === 0;
+        }
+
+        // ---- licytacja ----
+        chooseTrump(v, canAsk) {
+          let best = null,
+            bs = -1;
+          for (const s of SUITS) {
+            const cs = v.hand.filter((c) => c.s === s);
+            if (!cs.length) continue;
+            let sc = cs.reduce((a, c) => a + 3 + ORD[c.r], 0);
+            if (cs.some((c) => c.r === "K") && cs.some((c) => c.r === "Q"))
+              sc += 6;
+            if (sc > bs) {
+              bs = sc;
+              best = s;
+            }
+          }
+          if (canAsk && bs < 7) return { kind: "partner" };
+          return { kind: "trump", suit: best };
+        }
+        declare(v) {
+          if (sureLepsza(v.hand)) return "lepsza";
+          if (sureGorsza(v.hand)) return "gorsza";
+          if (this.lvl() === "easy") return "normal";
+          return handEst(v.hand, v.trump) >= 85 ? "solo" : "normal";
+        }
+        respond(v) {
+          if (sureLepsza(v.hand)) return "lepsza";
+          if (sureGorsza(v.hand)) return "gorsza";
+          return "ok";
+        }
+        kontra(v, z3) {
+          const k = v.contract,
+            h = v.hand,
+            l = this.lvl();
+          if (l === "easy") return false;
+          const extra = l === "normal" ? 10 : 0;
+          if (k.type === "lepsza")
+            return (
+              h.filter((x) => x.r === "A" || x.r === "10").length >=
+              (z3 ? 1 : 2)
+            );
+          if (k.type === "gorsza")
+            return h.filter((x) => ORD[x.r] <= 1).length >= (z3 ? 2 : 4);
+          const e = handEst(h, v.trump) * (z3 ? 2 : 1);
+          return e >= (k.type === "solo" ? 45 : z3 ? 75 : 58) + extra;
+        }
+        rekontra(v, z3) {
+          const k = v.contract,
+            h = v.hand;
+          if (this.lvl() === "easy") return false;
+          if (k.type === "lepsza") return sureLepsza(h);
+          if (k.type === "gorsza") return sureGorsza(h);
+          const e = handEst(h, v.trump) * (z3 ? 2 : 1);
+          return e >= (k.type === "solo" ? 100 : 75);
+        }
+
+        // ---- rozgrywka ----
+        // Fakty wywnioskowane z jawnych zagrań (do wyjaśnień podpowiedzi)
+        voidFacts(T) {
+          const out = [];
+          for (let p = 0; p < 4; p++) {
+            if (p === this.pi) continue;
+            for (const s of this.voids[p])
+              out.push(
+                s === T
+                  ? `${NAMES[p]} nie przebił atutem, więc nie ma atutów`
+                  : `${NAMES[p]} nie dołożył do ${SGEN[s]}, więc nie ma ${SGEN[s]}`,
+              );
+          }
+          return out;
+        }
+        topWhy(c, hand) {
+          const hi = RANKS.filter((r) => ORD[r] > ORD[c.r]);
+          if (!hi.length) return "as to najwyższa karta";
+          const gone = hi.filter((r) => this.played.has(r + c.s));
+          const mine = hi.filter((r) =>
+            hand.some((x) => x.r === r && x.s === c.s),
+          );
+          const list = (rs) => rs.map((r) => cardH({ r, s: c.s })).join(", ");
+          const parts = [];
+          if (gone.length)
+            parts.push(
+              `${list(gone)} ${gone.length > 1 ? "już zeszły" : "już zszedł"}`,
+            );
+          if (mine.length) parts.push(`${list(mine)} masz sam`);
+          return parts.join(", ");
+        }
+        forcedWhy(v, card) {
+          if (!v.trick.length) return "";
+          const led = v.trick[0].card.s;
+          if (card.s === led)
+            return "musisz dołożyć do koloru i przebić, jeśli możesz";
+          if (isT(card, v.trump))
+            return `nie masz ${SGEN[led]}, więc musisz dać atut`;
+          return "";
+        }
+
+        play(v, legal) {
+          const noise = { easy: 0.4, normal: 0.12, hard: 0 }[this.lvl()];
+          if (Math.random() < noise)
+            return R(legal[Math.floor(Math.random() * legal.length)]);
+          if (!v.trick.length) return this.lead(v, legal);
+          if (legal.length === 1) {
+            const f = this.forcedWhy(v, legal[0]);
+            return R(
+              legal[0],
+              false,
+              `To jedyna dozwolona karta${f ? ` — ${f}` : ""}.`,
+            );
+          }
+          const me = this.pi,
+            T = v.trump,
+            k = v.contract,
+            D = k.declarer,
+            hand = v.hand;
+          const ally = (p) => TEAM[p] === TEAM[me];
+          const best = bestOf(v.trick, T);
+          const win = legal.filter((c) => beatsT(c, best.card, T));
+          const lose = legal.filter((c) => !beatsT(c, best.card, T));
+          const after = v.order.slice(v.order.indexOf(me) + 1);
+          const last = after.length === 0;
+          const pts = trickPts(v.trick);
+          const byOrd = (arr, dir) =>
+            [...arr].sort((a, b) => dir * (ORD[a.r] - ORD[b.r]))[0];
+          const ruffers = (s) =>
+            s === T
+              ? []
+              : after.filter(
+                  (p) =>
+                    !ally(p) && this.voids[p].has(s) && !this.voids[p].has(T),
+                );
+          const ruffRisk = (s) => ruffers(s).length > 0;
+          const safe = (c) => last || (this.isTop(c, hand) && !ruffRisk(c.s));
+          const bestH = `${NAMES[best.pi]} (${cardH(best.card)})`;
+          const whySafe = (c) =>
+            last
+              ? "jesteś ostatni w lewie"
+              : c.r === "A"
+                ? "as to najwyższa karta"
+                : `${cardH(c)} jest najwyższa: ${this.topWhy(c, hand)}`;
+          const whyUnsafe = (c) => {
+            const r = ruffers(c.s);
+            if (r.length)
+              return `${r.map((p) => NAMES[p]).join(" i ")} nie ma ${SGEN[c.s]}, więc może przebić atutem`;
+            return "ktoś po Tobie może mieć wyższą kartę";
+          };
+
+          if (k.type === "lepsza") {
+            if (me !== D && best.pi === D && win.length)
+              return R(
+                cheap(win, T),
+                false,
+                "Rozgrywający musi wziąć wszystkie lewy — przebij go i Lepsza przegrana.",
+              );
+            return R(
+              cheap(legal, T),
+              false,
+              "Nie przebijesz tej lewy — oddaj najtańszą kartę.",
+            );
+          }
+          if (k.type === "gorsza") {
+            if (me === D) {
+              if (lose.length)
+                return R(
+                  byOrd(lose, -1),
+                  false,
+                  "Grasz Gorszą — pozbądź się najwyższej karty, która nie weźmie lewy.",
+                );
+              return last
+                ? R(
+                    byOrd(win, -1),
+                    false,
+                    "Musisz przebić i jesteś ostatni — lewa i tak Twoja, pozbądź się najwyższej karty.",
+                  )
+                : R(
+                    byOrd(win, 1),
+                    false,
+                    "Musisz przebić — najniższą kartą, może ktoś po Tobie przebije wyżej.",
+                  );
+            }
+            if (best.pi === D)
+              return lose.length
+                ? R(
+                    byOrd(lose, -1),
+                    false,
+                    "Rozgrywający bierze tę lewę — nie przebijaj go, pozbądź się wysokiej karty.",
+                  )
+                : R(
+                    byOrd(win, 1),
+                    false,
+                    "Musisz przebić — zrób to najniższą kartą.",
+                  );
+            return R(
+              byOrd(legal, 1),
+              false,
+              "Zagraj nisko, żeby rozgrywający musiał brać lewy.",
+            );
+          }
+
+          // Bez pytania — pomocnik: dokłada punkty rozgrywającemu, sam unika lew
+          if (k.type === "solo" && me === partnerOf(D)) {
+            if (best.pi === D) {
+              if (!lose.length)
+                return R(
+                  cheap(win, T),
+                  false,
+                  "Musisz przebić rozgrywającego — najtańszą kartą.",
+                );
+              return safe(best.card)
+                ? R(
+                    rich(lose, T),
+                    false,
+                    `${bestH} bierze lewę na pewno (${whySafe(best.card)}) — dorzuć mu punkty.`,
+                  )
+                : R(
+                    cheap(lose, T),
+                    false,
+                    `${bestH} prowadzi, ale lewa nie jest pewna (${whyUnsafe(best.card)}) — dorzuć mało.`,
+                  );
+            }
+            if (!v.trick.some((e) => e.pi === D))
+              return R(
+                cheap(lose.length ? lose : legal, T),
+                false,
+                "Rozgrywający gra po Tobie — nie bierz lewy, Twoje punkty by przepadły.",
+              );
+            return win.length && pts > 0
+              ? R(
+                  cheap(win, T),
+                  false,
+                  `Lepiej wziąć lewę samemu (${pts} pkt przepadnie), niż oddać punkty przeciwnikom.`,
+                )
+              : R(
+                  cheap(lose.length ? lose : legal, T),
+                  false,
+                  "Nie opłaca się brać tej lewy — oddaj najtańszą kartę.",
+                );
+          }
+          if (
+            k.type === "solo" &&
+            me === D &&
+            best.pi === partnerOf(D) &&
+            win.length
+          )
+            return R(
+              cheap(win, T),
+              false,
+              "Lewy Twojego partnera nie liczą się w grze bez pytania — przebij, żeby punkty były Twoje.",
+            );
+
+          if (ally(best.pi)) {
+            if (lose.length)
+              return safe(best.card)
+                ? R(
+                    rich(lose, T),
+                    false,
+                    `Lewę bierze ${bestH} — ${whySafe(best.card)}. Dorzuć jak najwięcej punktów.`,
+                  )
+                : R(
+                    cheap(lose, T),
+                    false,
+                    `Prowadzi ${bestH}, ale lewa nie jest pewna — ${whyUnsafe(best.card)}. Dorzuć najtańszą kartę.`,
+                  );
+            return R(
+              cheap(win, T),
+              false,
+              "Musisz przebić (nawet partnera) — zrób to najtańszą kartą.",
+            );
+          }
+          if (win.length) {
+            if (last)
+              return R(
+                cheap(win, T),
+                false,
+                "Jesteś ostatni — weź lewę najtańszą kartą, która bije.",
+              );
+            const sure = win.filter(
+              (c) => this.isTop(c, hand) && !ruffRisk(c.s),
+            );
+            if (sure.length) {
+              const c = cheap(sure, T);
+              return R(
+                c,
+                false,
+                `${cardH(c)} na pewno weźmie lewę — ${isT(c, T) ? "to najwyższy atut w grze" : this.topWhy(c, hand)}.`,
+              );
+            }
+            if (pts >= 10)
+              return R(
+                cheap(win, T),
+                false,
+                `W lewie jest ${pts} pkt — warto przebić, choć ${whyUnsafe(win[0])}.`,
+              );
+            if (!lose.length)
+              return R(
+                cheap(win, T),
+                false,
+                "Musisz przebić — zrób to najtańszą kartą.",
+              );
+          }
+          return win.length
+            ? R(
+                cheap(lose, T),
+                false,
+                `Przebicie nie byłoby pewne (${whyUnsafe(win[0])}), a w lewie jest tylko ${pts} pkt — oddaj najtańszą kartę.`,
+              )
+            : R(
+                cheap(lose.length ? lose : legal, T),
+                false,
+                `Nie przebijesz ${bestH} — oddaj najtańszą kartę.`,
+              );
+        }
+
+        lead(v, legal) {
+          const me = this.pi,
+            T = v.trump,
+            k = v.contract,
+            D = k.declarer,
+            hand = v.hand;
+          if (k.type === "lepsza") {
+            const tops = legal.filter((c) => this.isTop(c, hand));
+            const pool = tops.length ? tops : legal;
+            const c = [...pool].sort((a, b) => ORD[b.r] - ORD[a.r])[0];
+            return R(
+              c,
+              false,
+              tops.length
+                ? `${cardH(c)} na pewno weźmie lewę — ${this.topWhy(c, hand)}.`
+                : "Nie masz pewnych kart — wyjdź najwyższą i licz na szczęście.",
+            );
+          }
+          if (k.type === "gorsza")
+            return R(
+              [...legal].sort(
+                (a, b) =>
+                  ORD[a.r] - ORD[b.r] ||
+                  this.unseenHigher(b, hand) - this.unseenHigher(a, hand),
+              )[0],
+              false,
+              "Wyjdź najniższą kartą z koloru, w którym inni mają wyższe — muszą przebijać.",
+            );
+
+          const melds = legal.filter((c) => v.canMeld(c));
+          if (melds.length) {
+            melds.sort((a, b) => isT(b, T) - isT(a, T) || ORD[a.r] - ORD[b.r]);
+            const c = melds[0];
+            return R(
+              c,
+              true,
+              `Masz parę K+Q ${suitH(c.s)} — zamelduj (+${isT(c, T) ? 40 : 20} pkt), wychodząc ${c.r === "Q" ? "damą (tańsza niż król)" : "królem"}.`,
+            );
+          }
+          if (k.type === "solo" && me === partnerOf(D)) {
+            const side = legal.filter((c) => !isT(c, T));
+            return R(
+              cheap(side.length ? side : legal, T),
+              false,
+              "Jesteś pomocnikiem w grze bez pytania — wyjdź nisko, Twoje lewy się nie liczą.",
+            );
+          }
+
+          const opp = (p) => TEAM[p] !== TEAM[me];
+          const ruffRisk = (s) =>
+            s !== T &&
+            [0, 1, 2, 3].some(
+              (p) => opp(p) && this.voids[p].has(s) && !this.voids[p].has(T),
+            );
+          const trumps = legal.filter((c) => isT(c, T));
+          const trumpsOut =
+            RANKS.some(
+              (r) =>
+                !this.played.has(r + T) &&
+                !hand.some((c) => c.r === r && c.s === T),
+            ) && [0, 1, 2, 3].some((p) => opp(p) && !this.voids[p].has(T));
+          if (TEAM[D] === TEAM[me] && trumps.length >= 2 && trumpsOut) {
+            const top = trumps.find((c) => this.isTop(c, hand));
+            if (top)
+              return R(
+                top,
+                false,
+                `${cardH(top)} to najwyższy atut w grze — ściągnij atuty przeciwnikom, żeby nie przebijali Waszych kart.`,
+              );
+          }
+          const sure = legal
+            .filter((c) => !isT(c, T) && this.isTop(c, hand) && !ruffRisk(c.s))
+            .sort((a, b) => b.v - a.v);
+          if (sure.length)
+            return R(
+              sure[0],
+              false,
+              `${cardH(sure[0])} na pewno weźmie lewę — ${this.topWhy(sure[0], hand)} i nic nie wskazuje, żeby przeciwnik mógł przebić atutem.`,
+            );
+
+          // Wyjście w kolor, którego partner nie ma — partner przebije atutem
+          const pt = partnerOf(me);
+          if (T && k.type !== "solo" && !this.voids[pt].has(T)) {
+            const r = legal.filter(
+              (c) => !isT(c, T) && this.voids[pt].has(c.s) && !ruffRisk(c.s),
+            );
+            if (r.length) {
+              const c = cheap(r, T);
+              return R(
+                c,
+                false,
+                `${NAMES[pt]} nie ma ${SGEN[c.s]}, a może mieć atuty — wyjdź w ${SGEN[c.s]}, partner przebije.`,
+              );
+            }
+          }
+          const side = legal.filter((c) => !isT(c, T));
+          if (side.length) {
+            const len = (s) => hand.filter((c) => c.s === s).length;
+            const score = (c) =>
+              c.v * 2 +
+              (c.r === "10" ? 12 : 0) +
+              (c.r === "A" ? 6 : 0) -
+              len(c.s);
+            const c = [...side].sort((a, b) => score(a) - score(b))[0];
+            return R(
+              c,
+              false,
+              `Nie masz pewnej karty — wyjdź nisko z długiego koloru (${SGEN[c.s]}), nie ryzykuj punktów${c.r === "10" ? "" : " ani dziesiątki bez asa"}.`,
+            );
+          }
+          return R(
+            cheap(legal, T),
+            false,
+            "Zostały Ci same atuty — wyjdź najtańszym.",
+          );
+        }
+      }
+      // AIS[0] nie gra — służy jako podpowiedź do analizy Twoich zagrań
+      const AIS = [new AI(0), new AI(1), new AI(2), new AI(3)];
+      let UNDO = [];
+
+      // ================================================================
+      // STAN
+      // ================================================================
+      let GEN = 0;
+      let G = blankState();
+
+      function blankState() {
+        return {
+          match: [0, 0],
+          target: S.target,
+          handNo: 0,
+          chooser: 0,
+          stats: { won: [0, 0], best: null },
+          history: [],
+          tlog: [],
+          adv: [],
+          melds: [],
+          start: null,
+          hands: [[], [], [], []],
+          trick: [],
+          tricks: [0, 0, 0, 0],
+          pts: [0, 0],
+          pending: [0, 0],
+          trump: null,
+          contract: null,
+          kontra: 0,
+          kontraZ3: false,
+          rekontraDone: false,
+          turn: -1,
+          asking: -1,
+          choosing: -1,
+          active: [0, 1, 2, 3],
+          order: [],
+          trickDone: null,
+          human: null,
+          tapNext: null,
+          phase: "idle",
+        };
+      }
+      function guard(g) {
+        if (g !== GEN) throw CANCEL;
+      }
+      async function sleep(ms) {
+        const g = GEN;
+        await new Promise((r) => setTimeout(r, ms));
+        guard(g);
+      }
+
+      // ================================================================
+      // REGUŁY
+      // ================================================================
+      function legalCards(p) {
+        const h = G.hands[p];
+        if (!G.trick.length) return [...h];
+        const led = G.trick[0].card.s;
+        const best = bestOf(G.trick, G.trump).card;
+        const follow = h.filter((c) => c.s === led);
+        if (follow.length) {
+          const beat = follow.filter((c) => beatsT(c, best, G.trump));
+          return beat.length ? beat : follow;
+        }
+        if (G.trump) {
+          const tr = h.filter((c) => c.s === G.trump);
+          if (tr.length) {
+            const beat = tr.filter((c) => beatsT(c, best, G.trump));
+            return beat.length ? beat : tr;
+          }
+        }
+        return [...h];
+      }
+      function illegalReason(card) {
+        if (!G.trick.length) return "";
+        const h = G.hands[0],
+          led = G.trick[0].card.s;
+        if (h.some((c) => c.s === led)) {
+          if (card.s !== led) return `Musisz dołożyć do koloru ${suitH(led)}.`;
+          return `Musisz przebić — masz wyższą kartę w ${suitH(led)}.`;
+        }
+        if (G.trump && h.some((c) => c.s === G.trump)) {
+          if (card.s !== G.trump)
+            return `Nie masz ${suitH(led)} — musisz dać atut ${suitH(G.trump)}.`;
+          return "Musisz przebić wyższym atutem.";
+        }
+        return "";
+      }
+      const pointGame = () =>
+        !!G.contract &&
+        (G.contract.type === "normal" || G.contract.type === "solo");
+      const noTrumpGame = () =>
+        !!G.contract &&
+        (G.contract.type === "lepsza" || G.contract.type === "gorsza");
+
+      function setActive() {
+        G.active = noTrumpGame()
+          ? [0, 1, 2, 3].filter((p) => p !== partnerOf(G.contract.declarer))
+          : [0, 1, 2, 3];
+      }
+      function setContract(type, D, z3) {
+        if (G.contract && G.contract.declarer !== D && G.kontra) {
+          G.kontra = 0;
+          G.kontraZ3 = false;
+          G.rekontraDone = false;
+          log("Kontra przepada — zmiana rozgrywającego");
+        }
+        if (type === "lepsza" || type === "gorsza") G.trump = null;
+        G.contract = { type, declarer: D, z3 };
+        setActive();
+      }
+      function gameName(k) {
+        const n = {
+          pending: "Wybór gry…",
+          normal: "Z pytaniem",
+          solo: "Bez pytania",
+          lepsza: "Lepsza",
+          gorsza: "Gorsza",
+        }[k.type];
+        return n + (k.z3 ? " z 3" : "");
+      }
+      function mult() {
+        if (!G.kontra) return 1;
+        return (G.kontraZ3 ? 4 : 2) * (G.kontra === 2 ? 2 : 1);
+      }
+      function kontraName() {
+        if (G.kontra === 2) return "rekontra";
+        return G.kontraZ3 ? "kontra z 3" : "kontra";
+      }
+      function kontraLabel() {
+        const n = kontraName();
+        return `${n[0].toUpperCase()}${n.slice(1)} ×${mult()}`;
+      }
+
+      function canMeld(p, c) {
+        const k = G.contract;
+        if (!G.trump || !k || G.trick.length) return false;
+        if (k.type === "solo" && p === partnerOf(k.declarer)) return false;
+        if (c.r !== "K" && c.r !== "Q") return false;
+        const pair = c.r === "K" ? "Q" : "K";
+        return G.hands[p].some((x) => x.s === c.s && x.r === pair);
+      }
+      function sideHasTrick(t) {
+        const k = G.contract;
+        if (k.type === "solo" && t === TEAM[k.declarer])
+          return G.tricks[k.declarer] > 0;
+        return G.tricks[t] + G.tricks[t + 2] > 0;
+      }
+      function countSide(w) {
+        const k = G.contract;
+        if (k.type === "solo" && w === partnerOf(k.declarer)) return -1;
+        return TEAM[w];
+      }
+      function doMeld(p, s) {
+        const pts = s === G.trump ? 40 : 20,
+          t = TEAM[p];
+        const now = sideHasTrick(t);
+        if (now) G.pts[t] += pts;
+        else G.pending[t] += pts;
+        G.melds.push({ p, s, pts });
+        SFX.meld();
+        toast(`👑 ${NAMES[p]}: meldunek ${suitH(s)} +${pts}`);
+        log(
+          `👑 ${NAMES[p]}: meldunek ${suitH(s)} +${pts}${now ? "" : " (liczy się po pierwszej lewie)"}`,
+        );
+      }
+      function playMove(p, mv) {
+        const { card, meld } = mv;
+        const led = G.trick.length ? G.trick[0].card.s : null;
+        if (meld) doMeld(p, card.s);
+        G.hands[p] = G.hands[p].filter((c) => !same(c, card));
+        G.trick.push({
+          pi: p,
+          card,
+          rot: Math.round((Math.random() - 0.5) * 16),
+        });
+        for (const a of AIS) if (a) a.observe(p, card, led, G.trump);
+        SFX.card();
+      }
+
+      function checkEnd(final) {
+        const k = G.contract,
+          D = k.declarer,
+          DT = TEAM[D],
+          OT = 1 - DT,
+          who = `Rozgrywający (${NAMES[D]})`;
+        if (k.type === "lepsza") {
+          if (G.tricks[(D + 1) % 4] + G.tricks[(D + 3) % 4] > 0)
+            return {
+              winner: OT,
+              reason: `${who} oddał lewę — Lepsza przegrana.`,
+            };
+          return final
+            ? { winner: DT, reason: `${who} wziął wszystkie lewy!` }
+            : null;
+        }
+        if (k.type === "gorsza") {
+          if (G.tricks[D] > 0)
+            return {
+              winner: OT,
+              reason: `${who} wziął lewę — Gorsza przegrana.`,
+            };
+          return final
+            ? { winner: DT, reason: `${who} nie wziął żadnej lewy!` }
+            : null;
+        }
+        const t66 = (t) =>
+          t === 0 ? "Twoja drużyna ma 66!" : "Przeciwnicy mają 66!";
+        // W trybie treningowym Twoja drużyna kończy rozdanie tylko przez „Mam 66!”
+        const auto = (t) => !(S.hideMine && t === 0);
+        if (G.pts[DT] >= 66 && auto(DT))
+          return {
+            winner: DT,
+            reason: k.type === "solo" ? `${who} sam ugrał 66!` : t66(DT),
+          };
+        if (G.pts[OT] >= 66 && auto(OT)) return { winner: OT, reason: t66(OT) };
+        if (!final) return null;
+        const missed =
+          S.hideMine && G.pts[0] >= 66
+            ? ` Mieliście ${G.pts[0]} pkt, ale nikt nie ogłosił 66.`
+            : "";
+        if (k.type === "solo")
+          return { winner: OT, reason: `${who} nie ugrał sam 66.${missed}` };
+        const lw = G.trickDone.w;
+        return {
+          winner: TEAM[lw],
+          reason: `Nikt nie ogłosił 66 — decyduje ostatnia lewa (${NAMES[lw]}).${missed}`,
+        };
+      }
+
+      function claimResult() {
+        const mine = G.pts[0];
+        if (mine >= 66)
+          return {
+            winner: 0,
+            reason: `Ogłaszasz 66 — macie ${mine} pkt. Zgadza się!`,
+          };
+        return {
+          winner: 1,
+          falseClaim: true,
+          reason: `Ogłaszasz 66, ale macie tylko ${mine} pkt!`,
+        };
+      }
+
+      function scoreHand(res) {
+        if (res.winner < 0) return { gp: 0, text: "" };
+        const k = G.contract,
+          D = k.declarer,
+          DT = TEAM[D];
+        let base;
+        const parts = [];
+        if (res.falseClaim) {
+          base = G.tricks[0] + G.tricks[2] === 0 ? 3 : 2;
+          parts.push(`${base} (błędne 66)`);
+        } else if (noTrumpGame()) {
+          base = 6;
+          parts.push(`6 (${k.type === "lepsza" ? "Lepsza" : "Gorsza"})`);
+          if (k.z3) {
+            base *= 2;
+            parts.push("×2 (z 3)");
+          }
+        } else {
+          const L = 1 - res.winner;
+          const lt =
+            L === DT && k.type === "solo"
+              ? G.tricks[D]
+              : G.tricks[L] + G.tricks[L + 2];
+          const lp = G.pts[L];
+          base = lt === 0 ? 3 : lp < 33 ? 2 : 1;
+          parts.push(
+            `${base} (${lt === 0 ? "Schwarz" : lp < 33 ? "Schneider" : "zwykła"})`,
+          );
+          if (k.type === "solo") {
+            base *= 2;
+            parts.push("×2 (bez pytania)");
+          }
+        }
+        const m = mult();
+        if (m > 1) parts.push(`×${m} (${kontraName()})`);
+        return { gp: base * m, text: `${parts.join(" ")} = ${base * m}` };
+      }
+
+      function view(p) {
+        return {
+          hand: [...G.hands[p]],
+          trick: G.trick.map((e) => ({ pi: e.pi, card: e.card })),
+          trump: G.trump,
+          contract: G.contract ? { ...G.contract } : null,
+          order: [...G.order],
+          canMeld: (c) => canMeld(p, c),
+        };
+      }
+
+      // ================================================================
+      // INTERAKCJA
+      // ================================================================
+      function setStatus(html) {
+        $("status").innerHTML = html;
+      }
+      function setActions(btns) {
+        const box = $("actions");
+        box.innerHTML = "";
+        for (const b of btns) {
+          const el = document.createElement("button");
+          el.className = "btn " + (b.cls || "");
+          el.innerHTML = b.label;
+          el.onclick = b.fn;
+          box.appendChild(el);
+        }
+      }
+      async function askH(text, opts) {
+        const g = GEN;
+        setStatus(text);
+        const v = await new Promise((res) =>
+          setActions(
+            opts.map((o) => ({
+              ...o,
+              fn: () => {
+                setActions([]);
+                res(o.value);
+              },
+            })),
+          ),
+        );
+        guard(g);
+        return v;
+      }
+      async function waitNext(msg, label, allowClaim = false) {
+        const g = GEN;
+        setStatus(msg);
+        const act = await new Promise((res) => {
+          const done = (v) => {
+            G.tapNext = null;
+            setActions([]);
+            res(v);
+          };
+          G.tapNext = () => done("next");
+          const btns = [{ label, cls: "primary", fn: () => done("next") }];
+          if (allowClaim && canClaim())
+            btns.push({
+              label: "✋ Mam 66!",
+              cls: "claim",
+              fn: () => done("claim"),
+            });
+          setActions(btns);
+        });
+        guard(g);
+        return act;
+      }
+      const canClaim = () => S.hideMine && pointGame() && G.phase === "play";
+      function claimBtns() {
+        if (!canClaim()) return [];
+        return [
+          {
+            label: "✋ Mam 66!",
+            cls: "claim",
+            fn: () => {
+              const H = G.human;
+              if (!H) return;
+              G.human = null;
+              setActions([]);
+              H.res({ claim: true });
+            },
+          },
+        ];
+      }
+      // Ukryte liczniki: „?” zamiast punktów danej drużyny
+      const hidePts = (t) => (t === 0 ? S.hideMine : S.hideOpp);
+      function modal(title, html, btns) {
+        const g = GEN;
+        return new Promise((res) => {
+          $("m-title").innerHTML = title;
+          $("m-body").innerHTML = html;
+          const box = $("m-btns");
+          box.innerHTML = "";
+          for (const b of btns) {
+            const el = document.createElement("button");
+            el.className = "btn " + (b.cls ?? "primary");
+            el.innerHTML = b.label;
+            el.onclick = () => {
+              $("modal").classList.remove("show");
+              res(b.value);
+            };
+            box.appendChild(el);
+          }
+          $("modal").classList.add("show");
+        }).then((v) => {
+          guard(g);
+          return v;
+        });
+      }
+      function toast(html) {
+        const t = $("toast");
+        t.innerHTML = html;
+        t.classList.add("show");
+        clearTimeout(toast.h);
+        toast.h = setTimeout(() => t.classList.remove("show"), 1800);
+      }
+      function log(html, cls = "") {
+        const li = document.createElement("li");
+        li.innerHTML = html;
+        if (cls) li.className = cls;
+        $("log").appendChild(li);
+        $("log").scrollTop = 1e9;
+      }
+
+      async function decide(p, ai, human) {
+        G.asking = p;
+        renderSeats();
+        let v;
+        if (p === 0) v = await human();
+        else {
+          setStatus(`${NAMES[p]} myśli…`);
+          await sleep(delay());
+          v = ai(view(p));
+        }
+        G.asking = -1;
+        renderSeats();
+        return v;
+      }
+      const trumpInfo = () =>
+        G.trump ? `atut ${suitH(G.trump)} ${SNAME[G.trump]}` : "bez atutu";
+
+      function decideTrump(p, canAsk) {
+        return decide(
+          p,
+          (v) => AIS[p].chooseTrump(v, canAsk),
+          () => {
+            const btns = SUITS.map((s) => ({
+              label: `${suitH(s)} ${SNAME[s]}`,
+              value: { kind: "trump", suit: s },
+              cls: "suit",
+            }));
+            if (canAsk)
+              btns.push({
+                label: "🤝 Partner wybiera",
+                value: { kind: "partner" },
+                cls: "sm",
+              });
+            btns.push(
+              {
+                label: "⬆ Lepsza z 3<small>×2 · wszystkie lewy</small>",
+                value: { kind: "lepsza" },
+                cls: "sm",
+              },
+              {
+                label: "⬇ Gorsza z 3<small>×2 · żadnej lewy</small>",
+                value: { kind: "gorsza" },
+                cls: "sm",
+              },
+            );
+            return askH(
+              canAsk
+                ? "Wybierz atut na podstawie 3 kart:"
+                : "Partner prosi Cię o wybór — teraz Ty rozgrywasz:",
+              btns,
+            );
+          },
+        );
+      }
+      function decideGame(p) {
+        return decide(
+          p,
+          (v) => AIS[p].declare(v),
+          () =>
+            askH(`Masz 6 kart, ${trumpInfo()}. Jak grasz?`, [
+              {
+                label: "Z pytaniem<small>z partnerem do 66</small>",
+                value: "normal",
+                cls: "primary half",
+              },
+              {
+                label: "Bez pytania<small>sam do 66 · ×2</small>",
+                value: "solo",
+                cls: "half",
+              },
+              {
+                label: "⬆ Lepsza<small>wszystkie lewy · 6</small>",
+                value: "lepsza",
+                cls: "half",
+              },
+              {
+                label: "⬇ Gorsza<small>żadnej lewy · 6</small>",
+                value: "gorsza",
+                cls: "half",
+              },
+            ]),
+        );
+      }
+      function decideRespond(p) {
+        const D = G.contract.declarer;
+        return decide(
+          p,
+          (v) => AIS[p].respond(v),
+          () =>
+            askH(
+              `${NAMES[D]} gra <b>Z pytaniem</b>, ${trumpInfo()}. Akceptujesz?`,
+              [
+                { label: "✔ Akceptuję", value: "ok", cls: "primary" },
+                { label: "⬆ Gram Lepszą", value: "lepsza" },
+                { label: "⬇ Gram Gorszą", value: "gorsza" },
+              ],
+            ),
+        );
+      }
+      function decideKontra(p, z3) {
+        const k = G.contract;
+        return decide(
+          p,
+          (v) => AIS[p].kontra(v, z3),
+          () =>
+            askH(
+              `${NAMES[k.declarer]}: <b>${gameName(k)}</b>, ${trumpInfo()}. Dajesz kontrę${z3 ? " z 3" : ""}?`,
+              [
+                {
+                  label: `⚡ Kontra${z3 ? " z 3 (×4)" : " (×2)"}`,
+                  value: true,
+                  cls: "danger",
+                },
+                { label: "Pas", value: false },
+              ],
+            ),
+        );
+      }
+      function decideRekontra(p, z3) {
+        return decide(
+          p,
+          (v) => AIS[p].rekontra(v, z3),
+          () =>
+            askH(`Przeciwnicy dali <b>${kontraLabel()}</b>. Rekontra?`, [
+              { label: "💥 Rekontra (×2)", value: true, cls: "danger" },
+              { label: "Pas", value: false },
+            ]),
+        );
+      }
+
+      async function humanPlay(legal) {
+        const g = GEN;
+        setStatus(turnHint());
+        setActions([]);
+        const mv = await new Promise((res) => {
+          G.human = { legal, sel: null, res };
+          renderHand();
+          setActions(extraBtns());
+          $("btn-undo").disabled = !canUndo();
+          SFX.turn();
+        });
+        guard(g);
+        return mv;
+      }
+      function turnHint() {
+        if (!G.trick.length)
+          return "Twój ruch — wychodzisz. Dotknij kartę, aby ją wybrać.";
+        const b = bestOf(G.trick, G.trump);
+        return `Twój ruch. Prowadzi <b>${NAMES[b.pi]}</b> ${cardH(b.card)}.`;
+      }
+      function onCardTap(card, el) {
+        const H = G.human;
+        if (!H) return;
+        if (!H.legal.some((c) => same(c, card))) {
+          setStatus(
+            illegalReason(card) || "Tej karty nie możesz teraz zagrać.",
+          );
+          if (el) {
+            el.classList.remove("shake");
+            void el.offsetWidth;
+            el.classList.add("shake");
+          }
+          SFX.bad();
+          return;
+        }
+        const m = canMeld(0, card);
+        if (same(H.sel, card) || (S.oneClick && !m)) return commit(card, m);
+        selectCard(card);
+      }
+      function selectCard(card) {
+        const H = G.human;
+        const m = canMeld(0, card);
+        H.sel = card;
+        renderHand();
+        const mp = card.s === G.trump ? 40 : 20;
+        setStatus(
+          m
+            ? `Masz parę K+Q ${suitH(card.s)} — możesz zameldować.`
+            : `Wybrano ${cardH(card)}. Dotknij ponownie lub potwierdź.`,
+        );
+        setActions(
+          (m
+            ? [
+                {
+                  label: `👑 Melduj i zagraj (+${mp})`,
+                  cls: "primary",
+                  fn: () => commit(card, true),
+                },
+                { label: "Zagraj bez meldunku", fn: () => commit(card, false) },
+              ]
+            : [
+                {
+                  label: `▶ Zagraj ${cardH(card)}`,
+                  cls: "primary",
+                  fn: () => commit(card, false),
+                },
+              ]
+          ).concat(extraBtns()),
+        );
+      }
+      // Zaznacza kartę, którą zagrałoby AI (poziom trudny); nie zagrywa jej za Ciebie
+      function showHint() {
+        const H = G.human;
+        if (!H || !G.tip) return;
+        G.hintUsed = true;
+        selectCard(G.tip.card);
+        const m = G.tip.meld && canMeld(0, G.tip.card);
+        const facts = AIS[0].voidFacts(G.trump);
+        setStatus(
+          `💡 <b>${cardH(G.tip.card)}${m ? " z meldunkiem" : ""}</b> — ${G.tip.why || "tak zagrałoby AI."}` +
+            (facts.length
+              ? `<br><small>Co wiesz: ${facts.join("; ")}.</small>`
+              : "") +
+            "<br><small>Dotknij karty ponownie lub potwierdź.</small>",
+        );
+      }
+      function extraBtns() {
+        const b = [];
+        if (G.human && G.tip)
+          b.push({ label: "💡 Podpowiedź", cls: "tip", fn: showHint });
+        return b.concat(claimBtns());
+      }
+      function commit(card, meld) {
+        const H = G.human;
+        if (!H) return;
+        G.human = null;
+        setActions([]);
+        H.res({ card, meld: meld && canMeld(0, card) });
+      }
+
+      // ================================================================
+      // PRZEBIEG GRY
+      // ================================================================
+      function newMatch() {
+        GEN++;
+        document
+          .querySelectorAll(".overlay")
+          .forEach((o) => o.classList.remove("show"));
+        G = blankState();
+        G.chooser = S.first === "me" ? 0 : Math.floor(Math.random() * 4);
+        UNDO = [];
+        $("log").innerHTML = "";
+        setActions([]);
+        render();
+        renderHistory();
+        runMatch().catch((e) => {
+          if (e !== CANCEL) console.error(e);
+        });
+      }
+      function continueMatch() {
+        const s = readSave();
+        if (!s) return newMatch();
+        GEN++;
+        document
+          .querySelectorAll(".overlay")
+          .forEach((o) => o.classList.remove("show"));
+        G = blankState();
+        Object.assign(G, {
+          match: s.match,
+          target: s.target,
+          handNo: s.handNo,
+          chooser: s.chooser,
+          stats: s.stats,
+          history: s.history || [],
+        });
+        UNDO = [];
+        $("log").innerHTML = "";
+        setActions([]);
+        render();
+        renderHistory();
+        runMatch(s.hand).catch((e) => {
+          if (e !== CANCEL) console.error(e);
+        });
+      }
+      const canUndo = () =>
+        G.phase === "play" && UNDO.length >= (G.human ? 2 : 1);
+      // Cofa do Twojego poprzedniego ruchu (razem z ruchami AI po nim)
+      function undo() {
+        if (!canUndo()) return;
+        const idx = G.human ? UNDO.length - 2 : UNDO.length - 1;
+        const u = JSON.parse(UNDO[idx]);
+        UNDO.length = idx;
+        GEN++;
+        G.human = null;
+        G.tapNext = null;
+        setActions([]);
+        toast("↶ Cofnięto ruch");
+        runMatch({ deck: G.deck0, play: u.play, log: u.log }).catch((e) => {
+          if (e !== CANCEL) console.error(e);
+        });
+      }
+      function pushUndo(t, leader) {
+        UNDO.push(
+          JSON.stringify({
+            play: snapPlay({ t, leader, trick: G.trick }),
+            log: $("log").innerHTML,
+          }),
+        );
+      }
+      function openStart() {
+        GEN++;
+        setActions([]);
+        G.human = null;
+        document
+          .querySelectorAll(".overlay")
+          .forEach((o) => o.classList.remove("show"));
+        $("start").classList.add("show");
+        syncSettings();
+        refreshContinue();
+      }
+
+      async function runMatch(resume = null) {
+        let rh = resume;
+        for (;;) {
+          await runHand(rh);
+          rh = null;
+          const w =
+            G.match[0] >= G.target ? 0 : G.match[1] >= G.target ? 1 : -1;
+          if (w >= 0) return matchOver(w);
+          G.chooser = (G.chooser + 1) % 4;
+        }
+      }
+
+      async function runHand(rh = null) {
+        if (!rh) {
+          G.handNo++;
+          UNDO = [];
+        }
+        Object.assign(G, {
+          hands: [[], [], [], []],
+          trick: [],
+          tricks: [0, 0, 0, 0],
+          pts: [0, 0],
+          pending: [0, 0],
+          tlog: [],
+          adv: [],
+          melds: [],
+          start: null,
+          trump: null,
+          contract: null,
+          kontra: 0,
+          kontraZ3: false,
+          rekontraDone: false,
+          turn: -1,
+          asking: -1,
+          active: [0, 1, 2, 3],
+          order: [],
+          trickDone: null,
+          human: null,
+          phase: "choose",
+          choosing: G.chooser,
+        });
+        AIS.forEach((a) => a && a.reset());
+        const deck = rh ? [...rh.deck] : shuffle(buildDeck());
+        G.deck0 = [...deck];
+        $("log").innerHTML = "";
+        if (rh && rh.play) {
+          restorePlay(rh.play);
+          G.phase = "play";
+          if (rh.log) {
+            $("log").innerHTML = rh.log;
+            log("↶ Cofnięto ruch");
+          } else log(`Rozdanie ${G.handNo} — wznowione`, "h");
+          saveGame({ t: rh.play.t, leader: rh.play.leader, trick: G.trick });
+          render();
+          const res = await playTricks(rh.play);
+          return finishHand(res);
+        }
+        saveGame();
+        const deal = () => {
+          for (let r = 0; r < 3; r++)
+            for (let i = 0; i < 4; i++)
+              G.hands[(G.chooser + i) % 4].push(deck.pop());
+        };
+        deal();
+        log(`Rozdanie ${G.handNo} — atut wybiera: ${NAMES[G.chooser]}`, "h");
+        render();
+
+        // 1. Wybór atutu z 3 kart
+        let D = G.chooser;
+        let pick = await decideTrump(D, true);
+        if (pick.kind === "partner") {
+          log(`${NAMES[D]}: prosi partnera o wybór`);
+          toast(`🤝 ${NAMES[D]} prosi partnera`);
+          D = partnerOf(D);
+          G.choosing = D;
+          render();
+          pick = await decideTrump(D, false);
+        }
+        if (pick.kind === "trump") {
+          G.trump = pick.suit;
+          setContract("pending", D, false);
+          log(`${NAMES[D]}: atut ${suitH(pick.suit)} ${SNAME[pick.suit]}`);
+        } else {
+          setContract(pick.kind, D, true);
+          log(`${NAMES[D]}: <b>${gameName(G.contract)}</b>!`);
+          toast(`${NAMES[D]}: ${gameName(G.contract)}!`);
+        }
+        G.phase = "bid";
+        render();
+
+        // 2. Kontra z 3
+        await kontraRound(true);
+
+        // 3. Dobranie kart i wybór gry
+        deal();
+        render();
+        await sleep(350);
+        if (G.contract.type === "pending") {
+          const t = await decideGame(D);
+          setContract(t, D, false);
+          log(`${NAMES[D]}: <b>${gameName(G.contract)}</b>`);
+          render();
+          if (t === "normal") {
+            for (let i = 1; i < 4; i++) {
+              const p = (D + i) % 4;
+              const r = await decideRespond(p);
+              if (r === "ok") {
+                log(`${NAMES[p]}: akceptuje`);
+                continue;
+              }
+              setContract(r, p, false);
+              log(`${NAMES[p]}: przejmuje — <b>${gameName(G.contract)}</b>!`);
+              toast(`${NAMES[p]}: ${gameName(G.contract)}!`);
+              render();
+              break;
+            }
+          } else {
+            toast(`${NAMES[D]}: ${gameName(G.contract)}`);
+          }
+        }
+
+        // 4. Kontra po 6 kartach
+        await kontraRound(false);
+
+        // 5. Rozgrywka
+        G.phase = "play";
+        G.start = G.hands.map((h) => h.map(cid));
+        render();
+        saveGame({ t: 0, leader: G.contract.declarer, trick: [] });
+        const res = await playTricks();
+        await finishHand(res);
+      }
+
+      async function kontraRound(z3) {
+        const D = G.contract.declarer;
+        if (!G.kontra) {
+          for (let i = 1; i < 4; i++) {
+            const p = (D + i) % 4;
+            if (TEAM[p] === TEAM[D]) continue;
+            if (await decideKontra(p, z3)) {
+              G.kontra = 1;
+              G.kontraZ3 = z3;
+              log(`⚡ ${NAMES[p]}: <b>${kontraLabel()}</b>`);
+              toast(`⚡ ${NAMES[p]}: ${kontraLabel()}`);
+              SFX.kontra();
+              render();
+              break;
+            }
+          }
+        }
+        if (G.kontra === 1 && !G.rekontraDone) {
+          G.rekontraDone = true;
+          for (const p of [D, partnerOf(D)]) {
+            if (!G.active.includes(p)) continue;
+            if (await decideRekontra(p, z3)) {
+              G.kontra = 2;
+              log(`💥 ${NAMES[p]}: <b>${kontraLabel()}</b>`);
+              toast(`💥 ${NAMES[p]}: ${kontraLabel()}`);
+              SFX.kontra();
+              render();
+              break;
+            }
+          }
+        }
+      }
+
+      async function playTricks(from = null) {
+        let leader = from ? from.leader : G.contract.declarer;
+        for (let t = from ? from.t : 0; t < 6; t++) {
+          if (!from || t !== from.t) G.trick = [];
+          G.trickDone = null;
+          G.order = [0, 1, 2, 3]
+            .map((i) => (leader + i) % 4)
+            .filter((p) => G.active.includes(p));
+          for (const p of G.order) {
+            if (G.trick.some((e) => e.pi === p)) continue;
+            G.turn = p;
+            render();
+            const legal = legalCards(p);
+            let mv;
+            if (p === 0) {
+              pushUndo(t, leader);
+              const tip = AIS[0].play(view(0), legal);
+              G.tip = tip;
+              G.hintUsed = false;
+              mv = await humanPlay(legal);
+              G.tip = null;
+              if (mv.claim) return endByClaim();
+              G.adv.push([t, cid(mv.card), cid(tip.card), G.hintUsed ? 1 : 0]);
+            } else {
+              setStatus(`${NAMES[p]} myśli…`);
+              await sleep(delay());
+              mv = AIS[p].play(view(p), legal);
+            }
+            playMove(p, mv);
+            saveGame({ t, leader, trick: G.trick });
+            render();
+            if (mv.meld) {
+              const r = checkEnd(false);
+              if (r) {
+                G.turn = -1;
+                commitResult(r);
+                render();
+                await waitNext(r.reason, "Wynik rozdania ▶");
+                return r;
+              }
+            }
+          }
+          G.turn = -1;
+          const w = bestOf(G.trick, G.trump).pi;
+          const last = t === 5;
+          const pts = trickPts(G.trick) + (last ? 10 : 0);
+          G.tricks[w]++;
+          const side = countSide(w);
+          if (pointGame() && side >= 0) {
+            G.pts[side] += pts;
+            if (G.pending[side]) {
+              log(`👑 Meldunek zaliczony: +${G.pending[side]}`);
+              G.pts[side] += G.pending[side];
+              G.pending[side] = 0;
+            }
+          }
+          G.tlog.push({
+            w,
+            p: pts,
+            s: [...G.pts],
+            c: G.trick.map((e) => [e.pi, cid(e.card)]),
+          });
+          G.trickDone = { w, pts };
+          const res = checkEnd(last);
+          if (res) commitResult(res);
+          else saveGame({ t: t + 1, leader: w, trick: [] });
+          render();
+          const shown = pointGame() && side >= 0 && !hidePts(side);
+          (TEAM[w] === 0 ? SFX.trickUs : SFX.trickThem)();
+          log(
+            `Lewa ${t + 1}: ${G.trick.map((e) => `${NAMES[e.pi]} ${cardH(e.card)}`).join(" · ")} → <b>${NAMES[w]}</b>${shown ? ` +${pts}` : ""}`,
+          );
+          let msg =
+            w === 0
+              ? "🏆 <b>Bierzesz lewę</b>"
+              : `🏆 <b>${NAMES[w]}</b> bierze lewę`;
+          if (pointGame() && side < 0)
+            msg += ` · ${pts} pkt przepada (pomocnik)`;
+          else if (shown) {
+            msg += ` · +${pts} pkt`;
+            if (last) msg += " (w tym +10 za ostatnią)";
+          }
+          if (res) msg += `<br>${res.reason}`;
+          if (S.manualNext || res) {
+            const act = await waitNext(
+              msg,
+              res ? "Wynik rozdania ▶" : "Dalej ▶",
+              !res,
+            );
+            if (act === "claim") return endByClaim();
+          } else {
+            setStatus(msg);
+            await sleep(delay() * 2 + 300);
+          }
+          if (res) return res;
+          await sweep(w);
+          leader = w;
+        }
+      }
+
+      async function sweep(w) {
+        const el = $("trick");
+        el.classList.add("sweep", "sweep-" + w);
+        try {
+          await sleep(320);
+          G.trick = [];
+          G.trickDone = null;
+          renderTrick();
+          renderSeats();
+        } finally {
+          el.classList.remove(
+            "sweep",
+            "sweep-0",
+            "sweep-1",
+            "sweep-2",
+            "sweep-3",
+          );
+        }
+      }
+
+      function endByClaim() {
+        G.turn = -1;
+        const r = claimResult();
+        commitResult(r);
+        render();
+        toast(r.falseClaim ? "❌ Błędne 66!" : "✅ Mam 66!");
+        log(`✋ Ty: „Mam 66!” — ${r.reason}`);
+        return r;
+      }
+
+      // Wynik jest doliczany i zapisywany od razu, zanim gracz zobaczy podsumowanie
+      function commitResult(res) {
+        const sc = scoreHand(res);
+        if (res.winner >= 0) {
+          G.match[res.winner] += sc.gp;
+          G.stats.won[res.winner]++;
+          if (res.winner === 0 && (!G.stats.best || sc.gp > G.stats.best.gp))
+            G.stats.best = { gp: sc.gp, name: gameName(G.contract) };
+        }
+        G.lastSc = sc;
+        G.phase = "done";
+        G.history.push({
+          n: G.handNo,
+          t: G.contract.type,
+          z: G.contract.z3,
+          d: G.contract.declarer,
+          tr: G.trump,
+          k: mult(),
+          w: res.winner,
+          gp: sc.gp,
+          m: [...G.match],
+        });
+        renderHistory();
+        if (G.match.some((s) => s >= G.target)) writeSave(null);
+        else saveBetweenHands();
+      }
+
+      async function finishHand(res) {
+        const sc = G.lastSc;
+        G.phase = "done";
+        render();
+        const k = G.contract;
+        const title =
+          res.winner === 0
+            ? "🎉 Wygrywacie rozdanie!"
+            : res.winner === 1
+              ? "😞 Przeciwnicy wygrywają"
+              : "🤝 Remis";
+        const rows = [
+          ["Gra", `${gameName(k)} · ${NAMES[k.declarer]} · ${trumpInfo()}`],
+          ["Wynik", res.reason],
+        ];
+        if (pointGame())
+          rows.push(["Punkty My : Oni", `${G.pts[0]} : ${G.pts[1]}`]);
+        rows.push([
+          "Lewy My : Oni",
+          `${G.tricks[0] + G.tricks[2]} : ${G.tricks[1] + G.tricks[3]}`,
+        ]);
+        if (res.winner >= 0) {
+          rows.push(["Wycena", sc.text]);
+          rows.push([
+            res.winner === 0 ? "Dla Was" : "Dla przeciwników",
+            `+${sc.gp}`,
+          ]);
+        }
+        rows.push(["Mecz", `${G.match[0]} : ${G.match[1]} (do ${G.target})`]);
+        log(
+          `${title}${res.winner >= 0 ? ` · +${sc.gp} dla ${res.winner === 0 ? "My" : "Oni"}` : ""}`,
+          "h",
+        );
+        const over = G.match.some((s) => s >= G.target);
+        const html = `<table class="res-table">${rows.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>${analysisHtml()}`;
+        if (!over) (res.winner === 0 ? SFX.win : SFX.lose)();
+        await modal(over ? `${title} · koniec meczu!` : title, html, [
+          {
+            label: over ? "🏁 Zobacz wynik meczu ▶" : "Następne rozdanie ▶",
+            value: 1,
+          },
+        ]);
+      }
+
+      function analysisHtml() {
+        const pg = pointGame();
+        let h = '<details class="ana"><summary>🔍 Analiza rozdania</summary>';
+        if (G.start)
+          h += `<h3>Karty na starcie</h3><table class="res-table small">${[
+            0, 2, 1, 3,
+          ]
+            .map(
+              (p) =>
+                `<tr><td class="t${TEAM[p]}c">${NAMES[p]}</td><td>${sortCards(G.start[p].map(cardOf)).map(cardH).join(" ")}</td></tr>`,
+            )
+            .join("")}</table>`;
+        h += `<h3>Przebieg lew</h3><table class="res-table small">${G.tlog
+          .map(
+            (e, i) =>
+              `<tr><td>${i + 1}.</td><td>${e.c.map(([pi, id]) => `${NAMES[pi]} ${cardH(cardOf(id))}`).join(" · ")}<br>→ <b class="t${TEAM[e.w]}c">${NAMES[e.w]}</b>${pg ? ` +${e.p}` : ""}</td><td>${pg ? `${e.s[0]} : ${e.s[1]}` : ""}</td></tr>`,
+          )
+          .join("")}</table>`;
+        if (pg) {
+          const fromTricks = [0, 0],
+            fromMelds = [0, 0];
+          G.tlog.forEach((e) => {
+            const s = countSide(e.w);
+            if (s >= 0) fromTricks[s] += e.p;
+          });
+          G.melds.forEach((m) => (fromMelds[TEAM[m.p]] += m.pts));
+          h += `<h3>Skąd punkty</h3><table class="res-table small">${[0, 1]
+            .map(
+              (t) =>
+                `<tr><td class="t${t}c">${t === 0 ? "My" : "Oni"}</td><td>${fromTricks[t]} z lew + ${fromMelds[t]} z meldunków</td><td>${G.pts[t]}</td></tr>`,
+            )
+            .join("")}</table>`;
+        }
+        const diff = G.adv.filter(([, played, tip]) => played !== tip);
+        const hints = G.adv.filter((a) => a[3]).length;
+        h += "<h3>Twoje zagrania vs podpowiedź AI</h3>";
+        if (hints) h += `<p class="hint">Użyte podpowiedzi: ${hints} 💡</p>`;
+        if (!G.adv.length)
+          h += '<p class="hint">W tym rozdaniu nie zagrywałeś kart.</p>';
+        else if (!diff.length)
+          h += `<p class="adv ok">Wszystkie zagrania (${G.adv.length}) zgodne z podpowiedzią 👍</p>`;
+        else
+          h += `<p class="adv">Zgodne: ${G.adv.length - diff.length} z ${G.adv.length}</p><ul class="adv">${diff
+            .map(
+              ([t, played, tip]) =>
+                `<li>Lewa ${t + 1}: zagrałeś ${cardH(cardOf(played))}, podpowiedź: ${cardH(cardOf(tip))}</li>`,
+            )
+            .join("")}</ul>`;
+        h +=
+          '<p class="hint">Podpowiedź to ruch AI na poziomie trudnym — heurystyka, nie wyrocznia.</p>';
+        return h + "</details>";
+      }
+
+      async function matchOver(w) {
+        const g = GEN;
+        const win = w === 0;
+        $("victory").classList.toggle("lose", !win);
+        $("v-icon").textContent = win ? "🏆" : "💀";
+        $("v-title").textContent = win ? "ZWYCIĘSTWO!" : "PORAŻKA";
+        $("v-sub").textContent = win
+          ? "Ty i Partner wygrywacie mecz!"
+          : "Przeciwnicy wygrywają mecz. Następnym razem się uda!";
+        $("v0").textContent = G.match[0];
+        $("v1").textContent = G.match[1];
+        const st = G.stats;
+        const rows = [
+          ["Rozdania", G.handNo],
+          ["Wygrane rozdania My : Oni", `${st.won[0]} : ${st.won[1]}`],
+          [
+            "Najlepsze rozdanie",
+            st.best ? `+${st.best.gp} (${st.best.name})` : "—",
+          ],
+          ["Poziom przeciwników", LEVELS[S.level]],
+        ];
+        $("v-stats").innerHTML = rows
+          .map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`)
+          .join("");
+        $("v-chart").innerHTML = chartSvg();
+        $("victory").classList.add("show");
+        if (win) confetti();
+        (win ? SFX.victory : SFX.lose)();
+        const v = await new Promise((res) => {
+          $("v-new").onclick = () => res("new");
+          $("v-settings").onclick = () => res("start");
+        });
+        $("confetti").innerHTML = "";
+        guard(g);
+        if (v === "new") newMatch();
+        else openStart();
+      }
+      function confetti() {
+        const box = $("confetti");
+        box.innerHTML = "";
+        const colors = [
+          "#f5c542",
+          "#ff6b6b",
+          "#7fb2ff",
+          "#6be38f",
+          "#ffffff",
+          "#c38bff",
+        ];
+        for (let i = 0; i < 90; i++) {
+          const d = document.createElement("i");
+          d.style.left = Math.random() * 100 + "%";
+          d.style.background = colors[i % colors.length];
+          d.style.animationDelay = Math.random() * 2.5 + "s";
+          d.style.animationDuration = 2.8 + Math.random() * 2.2 + "s";
+          d.style.setProperty("--dx", Math.random() * 160 - 80 + "px");
+          d.style.setProperty("--r", Math.random() * 720 + "deg");
+          box.appendChild(d);
+        }
+      }
+
+      // ================================================================
+      // RENDEROWANIE
+      // ================================================================
+      function render() {
+        $("m0").textContent = G.match[0];
+        $("m1").textContent = G.match[1];
+        $("mt").textContent = G.target;
+        $("btn-undo").disabled = !canUndo();
+        $("btn-last").disabled = !(G.tlog && G.tlog.length);
+        renderToggles();
+        renderHud();
+        renderSeats();
+        renderTrick();
+        renderHand();
+      }
+      function renderToggles() {
+        const set = (id, hidden, who) => {
+          const b = $(id);
+          b.textContent = hidden ? "🙈" : "👁";
+          b.classList.toggle("off", hidden);
+          b.title = `${hidden ? "Pokaż" : "Ukryj"} ${who}`;
+        };
+        set("tog-mine", S.hideMine, "nasze punkty (ukryte = sam ogłaszasz 66)");
+        set("tog-opp", S.hideOpp, "punkty przeciwników");
+      }
+      function chartSvg() {
+        const h = G.history;
+        if (!h.length) return "";
+        const W = 300,
+          H = 90,
+          pad = 10,
+          top = 20;
+        const max = Math.max(G.target, ...h.flatMap((e) => e.m));
+        const x = (i) => pad + (i * (W - 2 * pad)) / h.length;
+        const y = (v) => H - pad - (v * (H - pad - top)) / max;
+        const line = (t) =>
+          [[0, 0], ...h.map((e, i) => [i + 1, e.m[t]])]
+            .map(([i, v]) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`)
+            .join(" ");
+        const ty = y(G.target).toFixed(1);
+        return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Przebieg meczu">
+          <line x1="${pad}" x2="${W - pad}" y1="${ty}" y2="${ty}" stroke="#f5c542" stroke-dasharray="4 4"/>
+          <text x="${W - pad}" y="${ty - 3}" fill="#f5c542" font-size="9" text-anchor="end">cel ${G.target}</text>
+          <polyline points="${line(1)}" fill="none" stroke="#ff8a8a" stroke-width="2"/>
+          <polyline points="${line(0)}" fill="none" stroke="#7fb2ff" stroke-width="2"/>
+          <text x="${pad}" y="12" fill="#7fb2ff" font-size="9">My</text>
+          <text x="${pad + 20}" y="12" fill="#ff8a8a" font-size="9">Oni</text>
+        </svg>`;
+      }
+      function renderHistory() {
+        const h = G.history;
+        if (!h.length) {
+          $("hist").innerHTML = '<p class="hint">Brak rozegranych rozdań.</p>';
+          return;
+        }
+        const rows = [...h]
+          .reverse()
+          .map(
+            (e) =>
+              `<tr><td>#${e.n}</td><td>${gameName({ type: e.t, z3: e.z })} · ${NAMES[e.d]}${e.tr ? " " + suitH(e.tr) : ""}${e.k > 1 ? ` <span class="kon">×${e.k}</span>` : ""}</td><td class="t${e.w}c">+${e.gp} ${e.w === 0 ? "My" : "Oni"}</td><td>${e.m[0]} : ${e.m[1]}</td></tr>`,
+          )
+          .join("");
+        $("hist").innerHTML =
+          chartSvg() + `<table class="res-table small">${rows}</table>`;
+      }
+      function renderHud() {
+        const k = G.contract;
+        $("h-trump").innerHTML = G.trump
+          ? `${suitH(G.trump)} ${SNAME[G.trump]}`
+          : noTrumpGame()
+            ? "bez atutu"
+            : "—";
+        $("trump-mark").textContent = G.trump || "";
+        $("trump-mark").classList.toggle("red", RED.has(G.trump));
+        let game = "—";
+        if (k) {
+          game = `${gameName(k)} · ${NAMES[k.declarer]}`;
+          if (G.kontra) game += ` · <span class="kon">${kontraLabel()}</span>`;
+        } else if (G.phase === "choose") game = "wybór atutu…";
+        $("h-game").innerHTML = game;
+        let pts = "—";
+        if (k && noTrumpGame()) pts = `lewy rozgr.: ${G.tricks[k.declarer]}`;
+        else if (k) {
+          const p = (t) =>
+            hidePts(t) && G.phase !== "done"
+              ? "?"
+              : `${G.pts[t]}${G.pending[t] ? `<small>+${G.pending[t]}</small>` : ""}`;
+          pts = `${p(0)} : ${p(1)}`;
+        }
+        $("h-pts").innerHTML = pts;
+      }
+      function renderSeats() {
+        const k = G.contract;
+        for (let p = 0; p < 4; p++) {
+          const el = $("seat-" + p);
+          const on = G.turn === p || G.asking === p;
+          el.className =
+            `seat p${p} t${TEAM[p]}` +
+            (on ? " turn" : "") +
+            (G.trickDone && G.trickDone.w === p ? " win" : "") +
+            (G.active.includes(p) ? "" : " out");
+          let badges = "";
+          if (k && k.declarer === p) badges += "🎯";
+          if (!k && G.phase === "choose" && G.choosing === p) badges += "🤔";
+          if (!G.active.includes(p)) badges += "💤";
+          const tr =
+            G.phase === "play" || G.phase === "done"
+              ? `<span class="n">lewy ${G.tricks[p]}</span>`
+              : "";
+          const tag = `<div class="tag">${badges ? `<span>${badges}</span>` : ""}${NAMES[p]}${tr}</div>`;
+          const backs =
+            p === 0
+              ? ""
+              : `<div class="backs">${'<div class="mini"></div>'.repeat(G.hands[p].length)}</div>`;
+          el.innerHTML = p === 1 || p === 3 ? backs + tag : tag + backs;
+        }
+      }
+      function cardEl(c) {
+        const el = document.createElement("div");
+        el.className =
+          "card" +
+          (RED.has(c.s) ? " red" : "") +
+          (isT(c, G.trump) ? " trump" : "");
+        el.innerHTML =
+          `<span class="tl">${c.r}<i>${c.s}</i></span>` +
+          `<span class="mid">${c.s}</span>` +
+          `<span class="br">${c.r}<i>${c.s}</i></span>`;
+        return el;
+      }
+      function renderTrick() {
+        const best = G.trick.length ? bestOf(G.trick, G.trump) : null;
+        $("trick").classList.toggle("done", !!G.trickDone);
+        for (let p = 0; p < 4; p++) {
+          const slot = $("slot-" + p);
+          const e = G.trick.find((x) => x.pi === p);
+          const id = e ? cid(e.card) : "";
+          // Istniejące karty zostają w DOM, żeby nie skakały i nie animowały się ponownie
+          if (slot.dataset.id !== id) {
+            slot.dataset.id = id;
+            slot.innerHTML = "";
+            if (e) {
+              const el = cardEl(e.card);
+              el.style.setProperty("--rot", e.rot + "deg");
+              el.classList.add("fresh");
+              slot.appendChild(el);
+            }
+          }
+          const el = slot.firstChild;
+          if (el) {
+            el.classList.toggle("lead", e === best && !G.trickDone);
+            el.classList.toggle("won", e === best && !!G.trickDone);
+          }
+        }
+      }
+      function renderHand() {
+        const box = $("hand");
+        box.innerHTML = "";
+        box.classList.toggle("out", !G.active.includes(0));
+        box.classList.toggle("my-turn", !!G.human);
+        const H = G.human;
+        const so = (s) => (s === G.trump ? -1 : SUITS.indexOf(s));
+        const cards = [...G.hands[0]].sort(
+          (a, b) => so(a.s) - so(b.s) || ORD[b.r] - ORD[a.r],
+        );
+        // Animacja rozdania tylko dla kart, których nie było w poprzednim renderze
+        if (renderHand.hn !== G.handNo) {
+          renderHand.hn = G.handNo;
+          renderHand.prev = new Set();
+        }
+        let fresh = 0;
+        G.handOrder = cards;
+        for (const c of cards) {
+          const el = cardEl(c);
+          el.setAttribute("role", "button");
+          el.setAttribute("aria-label", `${c.r} ${SNAME[c.s]}`);
+          if (!renderHand.prev.has(cid(c))) {
+            el.classList.add("deal");
+            el.style.animationDelay = fresh++ * 70 + "ms";
+          }
+          if (H) {
+            el.classList.add(H.legal.some((x) => same(x, c)) ? "ok" : "no");
+            if (same(H.sel, c)) el.classList.add("sel");
+          }
+          el.onclick = () => onCardTap(c, el);
+          box.appendChild(el);
+        }
+        renderHand.prev = new Set(cards.map(cid));
+      }
+
+      // ================================================================
+      // USTAWIENIA / MENU
+      // ================================================================
+      function syncSettings() {
+        document
+          .querySelectorAll(".seg")
+          .forEach((seg) =>
+            seg
+              .querySelectorAll("button")
+              .forEach((b) =>
+                b.classList.toggle(
+                  "on",
+                  String(S[seg.dataset.key]) === b.dataset.val,
+                ),
+              ),
+          );
+        document
+          .querySelectorAll("input[data-key]")
+          .forEach((i) => (i.checked = !!S[i.dataset.key]));
+        document.querySelectorAll("input[data-name]").forEach((i) => {
+          if (document.activeElement !== i)
+            i.value = (S.names || {})[i.dataset.name] || "";
+        });
+      }
+      document.querySelectorAll(".seg").forEach((seg) => {
+        const key = seg.dataset.key;
+        seg.querySelectorAll("button").forEach((b) => {
+          b.onclick = () => {
+            S[key] = key === "target" ? +b.dataset.val : b.dataset.val;
+            saveSettings();
+            syncSettings();
+          };
+        });
+      });
+      function setHidden(key, val) {
+        S[key] = val;
+        saveSettings();
+        syncSettings();
+        render();
+        if (G.human && !G.human.sel) setActions(extraBtns());
+      }
+      document.querySelectorAll("input[data-key]").forEach((i) => {
+        i.onchange = () => setHidden(i.dataset.key, i.checked);
+      });
+      $("tog-mine").onclick = () => setHidden("hideMine", !S.hideMine);
+      $("tog-opp").onclick = () => setHidden("hideOpp", !S.hideOpp);
+      document.querySelectorAll("input[data-name]").forEach((i) => {
+        i.oninput = () => {
+          S.names = { ...S.names, [i.dataset.name]: i.value.slice(0, 12) };
+          saveSettings();
+          applyNames();
+          syncSettings();
+          render();
+          renderHistory();
+        };
+      });
+      $("btn-undo").onclick = undo;
+      document
+        .querySelectorAll("[data-open]")
+        .forEach(
+          (b) => (b.onclick = () => $(b.dataset.open).classList.add("show")),
+        );
+      document
+        .querySelectorAll("[data-close]")
+        .forEach(
+          (b) =>
+            (b.onclick = () => $(b.dataset.close).classList.remove("show")),
+        );
+      $("btn-menu").onclick = () => {
+        syncSettings();
+        $("menu").classList.add("show");
+      };
+      $("btn-newgame").onclick = openStart;
+      // Dwuetapowe potwierdzenie, żeby nie nadpisać zapisanego meczu jednym kliknięciem
+      $("btn-start").onclick = () => {
+        const b = $("btn-start");
+        if (readSave() && !b.dataset.confirm) {
+          b.dataset.confirm = "1";
+          b.className = "btn danger";
+          b.innerHTML = "⚠ Na pewno?<small>zapisany mecz przepadnie</small>";
+          setTimeout(() => {
+            delete b.dataset.confirm;
+            refreshContinue();
+          }, 3000);
+          return;
+        }
+        delete b.dataset.confirm;
+        newMatch();
+      };
+      $("btn-continue").onclick = continueMatch;
+      $("table").onclick = () => G.tapNext && G.tapNext();
+
+      const anyOverlay = () => document.querySelector(".overlay.show");
+      document.addEventListener("keydown", (e) => {
+        if (e.target.closest("input") || e.metaKey || e.ctrlKey || e.altKey)
+          return;
+        const ov = anyOverlay();
+        if (e.key === "Escape") {
+          if ($("last-trick").classList.contains("show"))
+            return $("last-trick").classList.remove("show");
+          for (const id of ["rules", "menu"])
+            if ($(id).classList.contains("show"))
+              return $(id).classList.remove("show");
+          return;
+        }
+        if (ov) {
+          if (e.key === "Enter" && ov.id === "modal") {
+            e.preventDefault();
+            $("m-btns").querySelector("button")?.click();
+          }
+          return;
+        }
+        if (/^[1-6]$/.test(e.key) && G.human && G.handOrder) {
+          const c = G.handOrder[+e.key - 1];
+          const el = $("hand").children[+e.key - 1];
+          if (c) onCardTap(c, el);
+        } else if (e.key === "Enter" || e.key === " ") {
+          const b = $("actions").querySelector(".btn.primary");
+          if (b) {
+            e.preventDefault();
+            b.click();
+          } else if (G.tapNext) {
+            e.preventDefault();
+            G.tapNext();
+          }
+        } else if (e.key === "h" || e.key === "H") {
+          showHint();
+        } else if (e.key === "l" || e.key === "L") {
+          toggleLastTrick();
+        } else if (e.key === "u" || e.key === "U" || e.key === "Backspace") {
+          undo();
+        }
+      });
+
+      function toggleLastTrick() {
+        const box = $("last-trick");
+        if (box.classList.contains("show")) return box.classList.remove("show");
+        const e = G.tlog && G.tlog[G.tlog.length - 1];
+        if (!e) return;
+        const side = countSide(e.w);
+        const shown = pointGame() && side >= 0 && !hidePts(side);
+        const cards = e.c
+          .map(
+            ([pi, id]) =>
+              `<div class="${pi === e.w ? "won" : ""}">${cardEl(cardOf(id)).outerHTML}<div class="who t${TEAM[pi]}c">${NAMES[pi]}</div></div>`,
+          )
+          .join("");
+        box.innerHTML = `<div class="lt-box"><b>Ostatnia lewa (${G.tlog.length}.)</b><div class="lt-cards">${cards}</div>🏆 ${NAMES[e.w]}${shown ? ` · +${e.p} pkt` : ""}<p class="hint">Dotknij, aby zamknąć</p></div>`;
+        box.classList.add("show");
+      }
+      $("btn-last").onclick = (e) => {
+        e.stopPropagation();
+        toggleLastTrick();
+      };
+      $("last-trick").onclick = (e) => {
+        e.stopPropagation();
+        $("last-trick").classList.remove("show");
+      };
+
+      // Instalacja jako aplikacja (PWA) — działa tylko przez https, nie w Apps Script
+      let installEvt = null;
+      const isStandalone = () =>
+        matchMedia("(display-mode: standalone)").matches ||
+        navigator.standalone;
+      const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+      function refreshInstall() {
+        const show =
+          !CLOUD &&
+          !isStandalone() &&
+          (!!installEvt || (isIOS() && location.protocol === "https:"));
+        document
+          .querySelectorAll(".btn-install")
+          .forEach((b) => (b.hidden = !show));
+      }
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        installEvt = e;
+        refreshInstall();
+      });
+      window.addEventListener("appinstalled", () => {
+        installEvt = null;
+        refreshInstall();
+      });
+      document.querySelectorAll(".btn-install").forEach(
+        (b) =>
+          (b.onclick = async () => {
+            if (installEvt) {
+              installEvt.prompt();
+              await installEvt.userChoice;
+              installEvt = null;
+              refreshInstall();
+            } else
+              alert(
+                "W Safari stuknij „Udostępnij”, a potem „Do ekranu początkowego”.",
+              );
+          }),
+      );
+      if (
+        "serviceWorker" in navigator &&
+        /^https?:$/.test(location.protocol) &&
+        !CLOUD
+      )
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      refreshInstall();
+
+      applyNames();
+      syncSettings();
+      refreshContinue();
+      syncFromCloud();
+      render();
+      renderHistory();
+    </script>
+  </body>
+</html>
